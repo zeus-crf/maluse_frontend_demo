@@ -107,6 +107,23 @@
 
       </form>
 
+      <!-- Ambiente de demonstração -->
+      <div class="rounded-xl border border-dashed border-blue-300 bg-blue-50 p-3 text-sm">
+        <p class="font-semibold text-blue-700">Ambiente de demonstração</p>
+        <p class="text-gray-600 mt-0.5">
+          Login: <code class="font-mono text-blue-800">demo&#64;marluse.com</code> ·
+          Senha: <code class="font-mono text-blue-800">demo123</code>
+        </p>
+        <button
+          type="button"
+          (click)="entrarComoVisitante()"
+          [disabled]="loading"
+          class="mt-2 w-full py-2.5 rounded-xl text-sm font-semibold text-blue-700 border border-blue-600 hover:bg-blue-600 hover:text-white active:scale-[0.98] transition-all disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Entrar como visitante
+        </button>
+      </div>
+
       <!-- <p class="text-center text-sm text-gray-500">
         Não tem conta?
         <a routerLink="/register" class="text-blue-600 font-semibold hover:underline underline-offset-4">Criar agora</a>

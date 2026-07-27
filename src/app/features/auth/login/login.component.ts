@@ -28,6 +28,15 @@ export class LoginComponent {
 
   loading = false;
 
+  // Credenciais públicas do ambiente de demonstração.
+  readonly demoEmail = 'demo@marluse.com';
+  readonly demoSenha = 'demo123';
+
+  entrarComoVisitante(): void {
+    this.form.patchValue({ email: this.demoEmail, password: this.demoSenha });
+    this.onSubmit();
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
