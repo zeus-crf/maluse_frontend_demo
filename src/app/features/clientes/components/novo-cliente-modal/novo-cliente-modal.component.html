@@ -1,0 +1,131 @@
+<p-dialog
+  [header]="titulo"
+  [visible]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '520px' }"
+  [breakpoints]="{'768px': '95vw'}"
+  [contentStyle]="{ padding: '0' }"
+  (onHide)="onFechar()">
+
+  <hr>
+
+  <form [formGroup]="form" class="flex flex-col gap-4 px-6 py-5">
+
+    <!-- Nome -->
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-gray-700">Nome <span class="text-red-500">*</span></label>
+      <input type="text" formControlName="nome"
+        placeholder="Nome completo ou razão social"
+        class="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:border-blue-400 text-gray-700 placeholder:text-gray-400 transition-colors"
+        [class.border-red-400]="form.get('nome')?.invalid && form.get('nome')?.touched"
+        [class.border-slate-200]="!(form.get('nome')?.invalid && form.get('nome')?.touched)" />
+      @if (form.get('nome') | fieldError; as msg) {
+        <span class="text-xs text-red-500 mt-0.5 flex items-center gap-1">
+          <i class="pi pi-times-circle text-[10px]"></i>{{ msg }}
+        </span>
+      }
+    </div>
+
+    <!-- Tipo de pessoa (só na criação) -->
+    @if (!modoEdicao) {
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-gray-700">Tipo de pessoa</label>
+        <div class="flex gap-2">
+          <button type="button" (click)="onTipoPessoaChange(true)"
+            class="flex-1 py-2 text-sm font-medium rounded-lg border transition-colors"
+            [ngClass]="consumidorFinal
+              ? 'border-green-400 bg-green-50 text-green-700'
+              : 'border-slate-200 text-gray-500 hover:bg-slate-50'">
+            <i class="pi pi-user mr-1.5"></i>Pessoa Física (PF)
+          </button>
+          <button type="button" (click)="onTipoPessoaChange(false)"
+            class="flex-1 py-2 text-sm font-medium rounded-lg border transition-colors"
+            [ngClass]="!consumidorFinal
+              ? 'border-violet-400 bg-violet-50 text-violet-700'
+              : 'border-slate-200 text-gray-500 hover:bg-slate-50'">
+            <i class="pi pi-building mr-1.5"></i>Pessoa Jurídica (PJ)
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- CPF / CNPJ -->
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-gray-700">{{ consumidorFinal ? 'CPF' : 'CNPJ' }}</label>
+      <input type="text" formControlName="cpfCnpj"
+        [mask]="maskCpfCnpj"
+        [placeholder]="consumidorFinal ? '000.000.000-00' : '00.000.000/0000-00'"
+        class="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:border-blue-400 text-gray-700 placeholder:text-gray-400 transition-colors"
+        [class.border-red-400]="form.get('cpfCnpj')?.invalid && form.get('cpfCnpj')?.touched"
+        [class.border-slate-200]="!(form.get('cpfCnpj')?.invalid && form.get('cpfCnpj')?.touched)" />
+      @if (form.get('cpfCnpj') | fieldError; as msg) {  
+        <span class="text-xs text-red-500 mt-0.5 flex items-center gap-1">
+          <i class="pi pi-times-circle text-[10px]"></i>{{ msg }}
+        </span>
+      }
+    </div>
+
+    <!-- Telefone + E-mail -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-gray-700">Telefone</label>
+        <input type="text" formControlName="telefone"
+          mask="(00) 0000-0000||(00) 00000-0000"
+          placeholder="(00) 00000-0000"
+          class="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:border-blue-400 text-gray-700 placeholder:text-gray-400 transition-colors"
+          [class.border-red-400]="form.get('telefone')?.invalid && form.get('telefone')?.touched"
+          [class.border-slate-200]="!(form.get('telefone')?.invalid && form.get('telefone')?.touched)" />
+        @if (form.get('telefone') | fieldError; as msg) {
+          <span class="text-xs text-red-500 mt-0.5 flex items-center gap-1">
+            <i class="pi pi-times-circle text-[10px]"></i>{{ msg }}
+          </span>
+        }
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-gray-700">E-mail</label>
+        <input type="email" formControlName="email"
+          placeholder="email@exemplo.com"
+          class="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:border-blue-400 text-gray-700 placeholder:text-gray-400 transition-colors"
+          [class.border-red-400]="form.get('email')?.invalid && form.get('email')?.touched"
+          [class.border-slate-200]="!(form.get('email')?.invalid && form.get('email')?.touched)" />
+        @if (form.get('email') | fieldError; as msg) {
+          <span class="text-xs text-red-500 mt-0.5 flex items-center gap-1">
+            <i class="pi pi-times-circle text-[10px]"></i>{{ msg }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <!-- Endereço -->
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-medium text-gray-700">Endereço</label>
+      <input type="text" formControlName="endereco"
+        placeholder="Rua, número, bairro, cidade"
+        class="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:border-blue-400 text-gray-700 placeholder:text-gray-400 transition-colors"
+        [class.border-red-400]="form.get('endereco')?.invalid && form.get('endereco')?.touched"
+        [class.border-slate-200]="!(form.get('endereco')?.invalid && form.get('endereco')?.touched)" />
+      @if (form.get('endereco') | fieldError; as msg) {
+        <span class="text-xs text-red-500 mt-0.5 flex items-center gap-1">
+          <i class="pi pi-times-circle text-[10px]"></i>{{ msg }}
+        </span>
+      }
+    </div>
+
+  </form>
+
+  <!-- Footer -->
+  <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50">
+    <button type="button" (click)="onFechar()" [disabled]="salvando"
+      class="px-4 py-[7px] text-[13px] font-medium text-gray-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer disabled:opacity-50">
+      Cancelar
+    </button>
+    <button type="button" (click)="onSalvar()" [disabled]="salvando"
+      class="flex items-center gap-2 px-4 py-[7px] text-[13px] font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+      @if (salvando) { <i class="pi pi-spin pi-spinner text-xs"></i> }
+      {{ modoEdicao ? 'Salvar alterações' : 'Cadastrar cliente' }}
+    </button>
+  </div>
+
+</p-dialog>

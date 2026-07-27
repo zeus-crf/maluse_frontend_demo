@@ -1,0 +1,364 @@
+@if (showWaTooltip) {
+  <div class="fixed z-[9999] pointer-events-none -translate-x-1/2 -translate-y-full px-2 py-1 text-[11px] text-white bg-gray-700 rounded whitespace-nowrap"
+    [style.left.px]="tooltipX"
+    [style.top.px]="tooltipY">
+    {{ !pedido?.clienteTelefone ? 'Sem telefone cadastrado' : 'Cobrar via WhatsApp' }}
+  </div>
+}
+
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="fechar.emit()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '670px' }"
+  [breakpoints]="{'768px': '95vw'}"
+  [contentStyle]="{ padding: '0' }"
+  header="Detalhes da Venda">
+
+<div class="sticky top-0 bg-white z-10">
+  <hr>
+</div>
+
+  @if (pedido) {
+    <div class="flex flex-col gap-5 px-6 py-5">
+
+      <!-- Info grid -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+
+        <div class="col-span-2">
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Cliente</div>
+          <div class="text-[13.5px] font-medium text-gray-800">{{ pedido.clienteNome }}</div>
+        </div>
+
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">N° da Venda</div>
+          <div class="text-[13.5px] font-semibold text-blue-600 font-mono">#{{ formatNumero(pedido.numero) }}</div>
+        </div>
+
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Status</div>
+          <div class="mt-0.5">
+            <p-tag [value]="getStatusLabel(pedido.status)" [severity]="getSeverity(pedido.status)" />
+          </div>
+        </div>
+
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Pagamento</div>
+          <div class="text-[13.5px] font-medium text-gray-800 capitalize">{{ getPagamentoLabel(pedido.formaPagamento) }}</div>
+        </div>
+
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Data</div>
+          <div class="text-[13.5px] font-medium text-gray-800">{{ formatData(pedido.dataMovimento) }}</div>
+        </div>
+
+        @if (pedido.dataVencimento) {
+          <div class="col-span-2">
+            <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Vencimento</div>
+            <div class="text-[13.5px] font-medium text-gray-800">{{ formatData(pedido.dataVencimento) }}</div>
+          </div>
+        }
+
+      </div>
+
+      <!-- Itens -->
+      <div>
+        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Itens</div>
+
+        <div class="border border-slate-200 rounded-lg overflow-x-auto">
+          <div class="min-w-[484px]">
+
+          <!-- Cabeçalho -->
+          <div class="grid grid-cols-[180px_60px_96px_96px] gap-2 bg-slate-50 border-b border-slate-200 px-[14px] py-[7px]">
+            @for (h of ['Produto','Qtd.','Vl. Unit.','Subtotal']; track h; let i = $index) {
+              <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em]"
+                [class.text-right]="i > 0">{{ h }}</div>
+            }
+          </div>
+
+          <!-- Linhas -->
+          @for (item of pedido.itens; track item.id; let i = $index) {
+            <div class="grid grid-cols-[180px_60px_96px_96px] gap-2 px-[14px] py-[9px] border-b border-slate-100 last:border-0 items-center"
+              [class.bg-white]="i % 2 === 0"
+              [class.bg-slate-50]="i % 2 !== 0">
+              <div class="text-[13px] text-gray-800">{{ item.produtoNome }}</div>
+              <div class="text-[13px] text-gray-500 text-right font-mono">{{ item.quantidade }}</div>
+              <div class="text-[13px] text-gray-500 text-right font-mono">{{ formatCurrency(item.precoUnitario) }}</div>
+              <div class="text-[13px] font-semibold text-gray-800 text-right font-mono">{{ formatCurrency(item.subtotal) }}</div>
+            </div>
+          }
+
+          <!-- Total / Desconto / Juros -->
+          <div class="bg-slate-50 border-t border-slate-200">
+            @if ((pedido.desconto && pedido.valorBruto !== pedido.valorTotal) || pedido.juros) {
+              <div class="grid grid-cols-[110px_60px_96px_96px] xl:grid-cols-[180px_60px_96px_96px] gap-2 px-[14px] py-[6px]">
+                <div class="col-span-3 text-[11px] text-gray-400 uppercase tracking-[0.06em] text-right self-center">Subtotal</div>
+                <div class="text-[13px] text-gray-400 text-right font-mono line-through">{{ formatCurrency(pedido.valorBruto) }}</div>
+              </div>
+              @if (pedido.desconto) {
+                <div class="grid grid-cols-[180px_60px_96px_96px] gap-2 px-[14px] py-[6px] border-t border-dashed border-slate-200">
+                  <div class="col-span-3 text-right self-center">
+                    <div class="text-[11px] text-red-400 uppercase tracking-[0.06em]">
+                      Desconto{{ pedido.tipoDesconto === 'PERCENTUAL' ? ' (' + pedido.desconto + '%)' : '' }}
+                    </div>
+                    @if (pedido.descontoAplicadoEm) {
+                      <div class="text-[10px] text-gray-400 mt-0.5">em {{ formatData(pedido.descontoAplicadoEm) }}</div>
+                    }
+                  </div>
+                  <div class="text-[13px] text-red-500 text-right font-mono self-center">
+                    -{{ formatCurrency(pedido.tipoDesconto === 'PERCENTUAL' ? pedido.valorBruto * pedido.desconto / 100 : pedido.desconto) }}
+                  </div>
+                </div>
+              }
+              @if (pedido.juros) {
+                <div class="grid grid-cols-[180px_60px_96px_96px] gap-2 px-[14px] py-[6px] border-t border-dashed border-slate-200">
+                  <div class="col-span-3 text-right self-center">
+                    <div class="text-[11px] text-orange-500 uppercase tracking-[0.06em]">
+                      Juros{{ pedido.tipoJuros === 'PERCENTUAL' ? ' (' + pedido.juros + '%)' : '' }}
+                    </div>
+                    @if (pedido.jurosAplicadoEm) {
+                      <div class="text-[10px] text-gray-400 mt-0.5">em {{ formatData(pedido.jurosAplicadoEm) }}</div>
+                    }
+                  </div>
+                  <div class="text-[13px] text-orange-500 text-right font-mono self-center">
+                    +{{ formatCurrency(pedido.tipoJuros === 'PERCENTUAL'
+                        ? (pedido.valorBruto - (pedido.tipoDesconto === 'PERCENTUAL' ? pedido.valorBruto * (pedido.desconto ?? 0) / 100 : (pedido.desconto ?? 0))) * pedido.juros / 100
+                        : pedido.juros) }}
+                  </div>
+                </div>
+              }
+              <div class="grid grid-cols-[180px_60px_96px_96px] gap-2 px-[14px] py-[9px] border-t border-slate-200">
+                <div class="col-span-3 text-[12px] font-bold text-gray-400 uppercase tracking-[0.06em] text-right self-center">Total</div>
+                <div class="text-[15px] font-bold text-blue-600 text-right font-mono">{{ formatCurrency(pedido.valorTotal) }}</div>
+              </div>
+            } @else {
+              <div class="grid grid-cols-[180px_60px_96px_96px] gap-2 px-[14px] py-[9px]">
+                <div class="col-span-3 text-[12px] font-bold text-gray-400 uppercase tracking-[0.06em] text-right self-center">Total</div>
+                <div class="text-[15px] font-bold text-blue-600 text-right font-mono">{{ formatCurrency(pedido.valorTotal) }}</div>
+              </div>
+            }
+          </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PARCELAS -->
+      @if (loadingParcelas) {
+        <div class="flex justify-center py-4">
+          <i class="pi pi-spin pi-spinner text-blue-400 text-lg"></i>
+        </div>
+      } @else if (parcelas.length > 1) {
+        <div>
+          <div class="flex items-center justify-between mb-[5px]">
+            <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Parcelas</div>
+            <div class="text-[10.5px] text-gray-400">{{ parcelasPagasCount }}/{{ parcelas.length }} pagas</div>
+          </div>
+
+          <div class="border border-slate-200 rounded-lg overflow-x-auto">
+            <div>
+            <!-- Cabeçalho -->
+            <div class="grid grid-cols-[44px_120px_110px_90px_64px] gap-2 bg-slate-50 border-b border-slate-100 px-3 py-[7px]">
+              <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.06em]">#</div>
+              <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Vencimento</div>
+              <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.06em] text-right">Valor</div>
+              <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.06em] text-center">Status</div>
+            </div>
+
+            <!-- Linhas -->
+            @for (parcela of parcelas; track parcela.id) {
+              <div class="grid grid-cols-[44px_120px_110px_90px_64px] gap-2 px-3 py-2.5 border-b border-slate-100 last:border-0 items-center">
+
+                <!-- Número -->
+                <div class="text-[12px] text-gray-400 font-mono">
+                  {{ parcela.numeroParcela }}<span class="text-gray-300">/{{ parcela.totalParcelas }}</span>
+                </div>
+
+                <!-- Vencimento -->
+                <div>
+                  <div class="text-[12px] text-gray-700">{{ formatData(parcela.dataVencimento ?? '') }}</div>
+                  @if (parcela.status === 'PAGO' && parcela.dataPagamento) {
+                    <div class="text-[10px] text-gray-400">pago em {{ formatData(parcela.dataPagamento) }}</div>
+                  }
+                </div>
+
+                <!-- Valor -->
+                <div class="text-[12px] font-semibold text-gray-800 text-right font-mono">
+                  {{ formatCurrency(parcela.valor) }}
+                </div>
+
+                <!-- Badge status -->
+                <div class="flex justify-center">
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+                    [class.bg-green-100]="parcela.status === 'PAGO'"
+                    [class.text-green-700]="parcela.status === 'PAGO'"
+                    [class.bg-amber-100]="parcela.status === 'PENDENTE' && !isVencida(parcela)"
+                    [class.text-amber-600]="parcela.status === 'PENDENTE' && !isVencida(parcela)"
+                    [class.bg-red-100]="isVencida(parcela)"
+                    [class.text-red-600]="isVencida(parcela)"
+                    [class.bg-gray-100]="parcela.status === 'CANCELADO'"
+                    [class.text-gray-500]="parcela.status === 'CANCELADO'">
+                    {{ getStatusParcelaLabel(parcela) }}
+                  </span>
+                </div>
+
+                <!-- Ação -->
+                <div class="flex justify-end">
+                  @if (parcela.status === 'PENDENTE') {
+                    <button type="button"
+                      (click)="pagarParcela(parcela.id)"
+                      [disabled]="pagandoParcela !== null"
+                      class="text-[11px] font-semibold text-blue-600 hover:text-blue-800 disabled:opacity-40 transition-colors">
+                      @if (pagandoParcela === parcela.id) {
+                        <i class="pi pi-spin pi-spinner text-[10px]"></i>
+                      } @else {
+                        Pagar
+                      }
+                    </button>
+                  }
+                </div>
+
+              </div>
+            }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Observação -->
+      @if (pedido.observacao) {
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Observação</div>
+          <div class="text-[13px] text-gray-500 bg-slate-50 rounded-md px-3 py-[10px]">{{ pedido.observacao }}</div>
+        </div>
+      }
+
+      <!-- Entrega -->
+      @if (pedido.entrega) {
+        <div>
+          <div class="flex items-center justify-between mb-[5px]">
+            <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Entrega</div>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+              [class.bg-green-100]="pedido.entrega.status === 'FEITA'"
+              [class.text-green-700]="pedido.entrega.status === 'FEITA'"
+              [class.bg-amber-100]="pedido.entrega.status === 'PENDENTE'"
+              [class.text-amber-600]="pedido.entrega.status === 'PENDENTE'">
+              {{ pedido.entrega.status === 'FEITA' ? 'Entregue' : 'Pendente' }}
+            </span>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-md px-3 py-2.5 flex flex-col gap-1.5">
+            <div class="flex items-center gap-1.5">
+              <i class="pi pi-map-marker text-[12px] text-gray-400"></i>
+              <span class="text-[13px] text-gray-700">{{ pedido.entrega.endereco }}</span>
+            </div>
+            @if (pedido.entrega.dataPrevista) {
+              <div class="flex items-center gap-1.5">
+                <i class="pi pi-calendar text-[12px] text-gray-400"></i>
+                <span class="text-[12px] text-gray-500">Previsão: {{ formatData(pedido.entrega.dataPrevista) }}</span>
+              </div>
+            }
+            @if (pedido.entrega.dataEntrega) {
+              <div class="flex items-center gap-1.5">
+                <i class="pi pi-check-circle text-[12px] text-green-500"></i>
+                <span class="text-[12px] text-green-600">Entregue em {{ formatData(pedido.entrega.dataEntrega) }}</span>
+              </div>
+            }
+            @if (pedido.entrega.status === 'PENDENTE') {
+              <div class="mt-0.5 pt-1.5 border-t border-slate-200">
+                <button type="button" (click)="marcarEntregue()"
+                  [disabled]="marcandoEntrega"
+                  class="flex items-center gap-1.5 text-[12px] font-semibold text-blue-600 hover:text-blue-800 disabled:opacity-50 transition-colors cursor-pointer">
+                  @if (marcandoEntrega) {
+                    <i class="pi pi-spin pi-spinner text-[11px]"></i>
+                    Registrando...
+                  } @else {
+                    <i class="pi pi-truck text-[11px]"></i>
+                    Marcar como entregue
+                  }
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Exportar -->
+      <div class="flex justify-end gap-2 pt-1">
+        <button type="button" (click)="exportService.imprimirPedido(pedido!, 'pdf')"
+          class="flex items-center gap-1.5 px-3 py-[7px] text-[13px] font-medium text-gray-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+          <i class="pi pi-file-pdf text-xs"></i>
+          PDF
+        </button>
+        <button type="button" (click)="exportService.imprimirPedido(pedido!, 'termica')"
+          class="flex items-center gap-1.5 px-3 py-[7px] text-[13px] font-medium text-gray-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+          <i class="pi pi-print text-xs"></i>
+          Térmica
+        </button>
+      </div>
+
+    </div>
+  }
+
+  <!-- Footer -->
+  <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50">
+    <div>
+      @if (podeCobrarWhatsapp) {
+        <button type="button"
+            [disabled]="!pedido?.clienteTelefone || salvando"
+            (click)="showWaModal = true"
+            (mouseenter)="onWaEnter($event)"
+            (mouseleave)="onWaLeave()"
+            class="flex items-center gap-1.5 px-4 py-[7px] text-[13px] font-semibold text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            style="background-color: #25D366;">
+            <i class="pi pi-whatsapp text-xs"></i>
+            <span class="hidden sm:inline">WhatsApp</span>
+        </button>
+      }
+      <app-whatsapp-modal
+        [visible]="showWaModal"
+        [clienteNome]="pedido?.clienteNome ?? ''"
+        [telefone]="pedido?.clienteTelefone ?? null"
+        [mensagem]="mensagemWhatsapp"
+        (fechar)="showWaModal = false"
+      />
+    </div>
+    <div class="flex gap-2">
+      <!-- <button type="button" (click)="fechar.emit()"
+        class="px-4 py-[7px] text-[13px] font-medium text-gray-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+        Fechar
+      </button> -->
+      @if (podeCancelar) {
+        <button type="button" (click)="cancelar.emit(pedido!.id)" [disabled]="salvando"
+          class="flex items-center gap-1.5 px-4 py-[7px] text-[13px] font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">
+          Cancelar
+          <i class="pi pi-times-circle text-xs"></i>
+        </button>
+      }
+      @if (podeConfirmar) {
+        <button type="button" (click)="confirmar.emit(pedido!.id)" [disabled]="salvando"
+          class="flex items-center gap-1.5 px-4 py-[7px] text-[13px] font-semibold text-white bg-amber-500 rounded-lg hover:bg-amber-600 disabled:opacity-50 transition-colors cursor-pointer">
+          @if (salvando) {
+            <i class="pi pi-spin pi-spinner text-xs"></i>
+          } @else {
+            <i class="pi pi-check text-xs"></i>
+          }
+          Confirmar
+        </button>
+      }
+      @if (podePagar) {
+        <button type="button" (click)="pagar.emit(pedido!.id)" [disabled]="salvando"
+          class="flex items-center gap-1.5 px-4 py-[7px] text-[13px] font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer">
+          @if (salvando) {
+            <i class="pi pi-spin pi-spinner text-xs"></i>
+          } @else {
+            <i class="pi pi-check text-xs"></i>
+          }
+          Pagar
+        </button>
+      }
+    </div>
+  </div>
+
+</p-dialog>

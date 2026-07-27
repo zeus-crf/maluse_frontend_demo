@@ -1,0 +1,190 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="fecharModal()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '560px' }"
+  [breakpoints]="{'768px': '95vw'}"
+  [contentStyle]="{ padding: '0' }"
+  header="Editar Venda">
+
+<div class="sticky top-0 bg-white z-10">
+  <hr>
+</div>
+
+  @if (pedido) {
+    <div class="flex flex-col gap-5 px-6 py-5">
+
+      <!-- Dados somente leitura -->
+      <div class="grid grid-cols-3 gap-3">
+        <div class="col-span-2">
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Cliente</div>
+          <div class="text-[13.5px] font-medium text-gray-800">{{ pedido.clienteNome }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Registrado em</div>
+          <div class="text-[13.5px] font-medium text-gray-500">{{ formatData(pedido.createdAt) }}</div>
+        </div>
+      </div>
+
+      <!-- Editável: Data do pedido -->
+      <div>
+        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Data do pedido</div>
+        <app-date-picker [(ngModel)]="dataMovimento" />
+      </div>
+
+      <!-- Itens somente leitura -->
+      <div>
+        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Itens</div>
+        <div class="border border-slate-200 rounded-md overflow-hidden">
+
+          <!-- Cabeçalho -->
+          <div class="grid grid-cols-[1fr_60px_96px_96px] gap-2 bg-slate-50 border-b border-slate-200 px-[14px] py-[7px]">
+            @for (h of ['Produto','Qtd.','Vl. Unit.','Subtotal']; track h; let i = $index) {
+              <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em]"
+                [class.text-right]="i > 0">{{ h }}</div>
+            }
+          </div>
+
+          <!-- Linhas -->
+          @for (item of pedido.itens; track item.id; let i = $index) {
+            <div class="grid grid-cols-[1fr_60px_96px_96px] gap-2 px-[14px] py-[9px] border-b border-slate-100 last:border-0 items-center"
+              [class.bg-white]="i % 2 === 0"
+              [class.bg-slate-50]="i % 2 !== 0">
+              <div class="text-[13px] text-gray-800">{{ item.produtoNome }}</div>
+              <div class="text-[13px] text-gray-500 text-right font-mono">{{ item.quantidade }}</div>
+              <div class="text-[13px] text-gray-500 text-right font-mono">{{ formatCurrency(item.precoUnitario) }}</div>
+              <div class="text-[13px] font-semibold text-gray-800 text-right font-mono">{{ formatCurrency(item.subtotal) }}</div>
+            </div>
+          }
+
+          <!-- Total -->
+          <div class="grid grid-cols-[1fr_60px_96px_96px] gap-2 px-[14px] py-[9px] bg-slate-50 border-t border-slate-200">
+            <div class="col-span-3 text-[12px] font-bold text-gray-400 uppercase tracking-[0.06em] text-right self-center">Total</div>
+            <div class="text-[15px] font-bold text-blue-600 text-right font-mono">{{ formatCurrency(pedido.valorTotal) }}</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Editável: Pagamento -->
+      <div>
+        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Pagamento</div>
+        <div class="flex flex-wrap gap-[6px]">
+          @for (f of formasPagamento; track f.valor) {
+            <button type="button"
+              (click)="formaPagamento = f.valor"
+              class="px-[14px] py-[5px] text-[12px] font-medium border rounded-full transition-all duration-150 cursor-pointer font-[inherit]"
+              [class.border-blue-500]="formaPagamento === f.valor"
+              [class.bg-blue-50]="formaPagamento === f.valor"
+              [class.text-blue-600]="formaPagamento === f.valor"
+              [class.border-slate-200]="formaPagamento !== f.valor"
+              [class.text-gray-500]="formaPagamento !== f.valor"
+              [class.bg-transparent]="formaPagamento !== f.valor">
+              {{ f.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Editável: Desconto -->
+      <div>
+        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Desconto <span class="text-[10px] font-normal normal-case">(recalcula parcelas pendentes)</span></div>
+        <div class="flex gap-2">
+          <div class="flex flex-shrink-0">
+            @for (opt of tipoDescontoOpcoes; track opt.val; let i = $index) {
+              <button type="button"
+                (click)="tipoDesconto = opt.val"
+                class="px-3 py-[6px] text-[12px] font-semibold border transition-all cursor-pointer font-[inherit]"
+                [style.border-radius]="i === 0 ? '6px 0 0 6px' : '0 6px 6px 0'"
+                [style.margin-left]="i === 1 ? '-1px' : '0'"
+                [class.bg-blue-600]="tipoDesconto === opt.val"
+                [class.text-white]="tipoDesconto === opt.val"
+                [class.border-blue-600]="tipoDesconto === opt.val"
+                [class.bg-white]="tipoDesconto !== opt.val"
+                [class.text-gray-500]="tipoDesconto !== opt.val"
+                [class.border-slate-200]="tipoDesconto !== opt.val">
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+          <div class="flex-1 flex items-center gap-3">
+            <input type="number" [(ngModel)]="desconto" min="0" step="0.01"
+              class="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-[6px] text-[13px] text-gray-800 outline-none focus:border-blue-400 font-[inherit] transition-colors" />
+            @if (valorDesconto > 0) {
+              <div class="text-right whitespace-nowrap">
+                <div class="text-[11px] text-gray-400 line-through font-mono">{{ formatCurrency(valorBruto) }}</div>
+                <div class="text-[14px] font-bold text-blue-600 font-mono">{{ formatCurrency(totalComDesconto) }}</div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Editável: Juros -->
+      <div>
+        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Juros <span class="text-[10px] font-normal normal-case">(recalcula parcelas pendentes)</span></div>
+        <div class="flex gap-2">
+          <div class="flex flex-shrink-0">
+            @for (opt of tipoJurosOpcoes; track opt.val; let i = $index) {
+              <button type="button"
+                (click)="tipoJuros = opt.val"
+                class="px-3 py-[6px] text-[12px] font-semibold border transition-all cursor-pointer font-[inherit]"
+                [style.border-radius]="i === 0 ? '6px 0 0 6px' : '0 6px 6px 0'"
+                [style.margin-left]="i === 1 ? '-1px' : '0'"
+                [class.bg-orange-500]="tipoJuros === opt.val"
+                [class.text-white]="tipoJuros === opt.val"
+                [class.border-orange-500]="tipoJuros === opt.val"
+                [class.bg-white]="tipoJuros !== opt.val"
+                [class.text-gray-500]="tipoJuros !== opt.val"
+                [class.border-slate-200]="tipoJuros !== opt.val">
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+          <div class="flex-1 flex items-center gap-3">
+            <input type="number" [(ngModel)]="juros" min="0" step="0.01"
+              class="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-[6px] text-[13px] text-gray-800 outline-none focus:border-orange-400 font-[inherit] transition-colors" />
+            @if (valorJuros > 0) {
+              <div class="text-right whitespace-nowrap">
+                <div class="text-[11px] text-orange-500 font-mono">+{{ formatCurrency(valorJuros) }}</div>
+                <div class="text-[14px] font-bold text-blue-600 font-mono">{{ formatCurrency(totalComDesconto) }}</div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Editável: Observação -->
+      <div>
+        <label class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] block mb-2">Observação</label>
+        <textarea
+          [(ngModel)]="observacao"
+          rows="3"
+          placeholder="Observações sobre a venda (opcional)…"
+          class="w-full bg-white border border-slate-200 rounded-md px-3 py-[9px] text-[13px] text-gray-800 font-[inherit] outline-none resize-y focus:border-blue-400 transition-colors">
+        </textarea>
+      </div>
+
+    </div>
+  }
+
+  <!-- Footer -->
+  <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50">
+    <button type="button" (click)="fecharModal()"
+      class="px-4 py-[7px] text-[13px] font-medium text-gray-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+      Cancelar
+    </button>
+    <button type="button" (click)="onSalvar()" [disabled]="!formaPagamento || salvando"
+      class="flex items-center gap-2 px-4 py-[7px] text-[13px] font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer">
+      @if (salvando) {
+        <i class="pi pi-spin pi-spinner text-xs"></i>
+      } @else {
+        <i class="pi pi-check text-xs"></i>
+      }
+      Salvar Alterações
+    </button>
+  </div>
+
+</p-dialog>

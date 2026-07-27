@@ -1,0 +1,369 @@
+<!-- Header -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Vendas</h1>
+    <p class="text-sm text-gray-400 mt-0.5">Histórico e gestão de vendas</p>
+  </div>
+
+  <div class="flex items-center gap-2">
+       <!-- @if (temFiltroAtivo) {
+      <button
+        type="button"
+        (click)="onLimparFiltros()"
+        class="flex items-center gap-2 px-4 py-2 text-[11px] font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors cursor-pointer">
+        <i class="pi pi-times text-[10px]"></i>
+        Limpar filtros
+      </button>
+    } -->
+
+    <button
+      (click)="abrirModalFiltros()"
+      class="flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded-xl transition-colors"
+      [ngClass]="temFiltroAtivo
+        ? 'border-blue-400 text-blue-600 bg-blue-50'
+        : 'border-slate-200 text-gray-600 bg-white hover:bg-slate-50'">
+      <span class="material-symbols-outlined text-[18px]">tune</span>
+      Filtros
+      @if (temFiltroAtivo) {
+        <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+      }
+    </button>
+    <button
+      (click)="abrirModalCriar()"
+      class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
+      <span class="material-symbols-outlined text-[18px]">add</span>
+      Nova Venda
+    </button>
+  </div>
+</div>
+
+
+<div class="flex pb-2 px-2">
+<!-- Filtro de Período -->
+ @if (periodoAtivo !== 'custom') {
+      <span class="ml-auto text-xs text-gray-400  whitespace-nowrap">{{ filtro.inicio }} → {{ filtro.fim }}</span>
+    }
+
+</div>
+<div class="bg-white rounded-xl border border-slate-200 px-4 py-3 mb-6">
+
+
+  <!-- Linha 1: label + botões de período + range de datas (quando não custom) -->
+  <div class="flex flex-col gap-3">
+    <div>
+      <span class="text-[11px] font-semibold text-gray-400 tracking-widest">PERÍODO</span>
+    </div>
+
+    <div>
+      @for (p of periodos; track p.value) {
+        <button (click)="selectPeriodo(p.value)" [ngClass]="periodoButtonClass(p.value)">
+          {{ p.label }}
+        </button>
+      }
+    </div>
+    <!-- @if (periodoAtivo !== 'custom') {
+      <span class="ml-auto text-xs text-gray-400 whitespace-nowrap">{{ inicio }} – {{ fim }}</span>
+    } -->
+  </div>
+  @if (periodoAtivo === 'custom') {
+    <div class="mt-3 pt-3 border-t border-slate-100">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs text-gray-400">De</span>
+        <div class="w-32"><app-date-picker [(ngModel)]="customInicio" [compact]="true" /></div>
+        <span class="text-xs text-gray-400">até</span>
+        <div class="w-32"><app-date-picker [(ngModel)]="customFim" [compact]="true" /></div>
+        <button (click)="aplicarPeriodoCustom()"
+          class="hidden min-[480px]:inline-flex items-center px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+          Aplicar
+        </button>
+        <button (click)="onLimparFiltros()"
+          class="hidden min-[480px]:inline-flex items-center"
+          [ngClass]="limparFiltroButtonClass(periodoAtivo)">
+          <span class="material-symbols-outlined text-[13px] align-middle mr-0.5">close</span>
+          Limpar
+        </button>
+      </div>
+      <div class="flex min-[480px]:hidden gap-2 mt-2">
+        <button (click)="aplicarPeriodoCustom()"
+          class="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+          Aplicar
+        </button>
+        <button (click)="onLimparFiltros()" [ngClass]="limparFiltroButtonClass(periodoAtivo)">
+          <span class="material-symbols-outlined text-[13px] align-middle mr-0.5">close</span>
+          Limpar
+        </button>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- KPI Cards -->
+@if (loading) {
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    @for (i of [1, 2, 3]; track i) {
+      <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-5 min-h-[124px] animate-pulse">
+        <div class="flex items-center justify-between mb-4">
+          <div class="h-3 w-28 bg-slate-100 rounded"></div>
+          <div class="w-8 h-8 rounded-lg bg-slate-100"></div>
+        </div>
+        <div class="h-7 w-28 bg-slate-100 rounded mb-2"></div>
+        <div class="h-3 w-24 bg-slate-100 rounded"></div>
+      </div>
+    }
+  </div>
+} @else {
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 fade-in">
+
+  <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm">
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Vendas no período</span>
+      <div class="relative group">
+        <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center cursor-help">
+          <span class="material-symbols-outlined text-[18px] text-blue-600">point_of_sale</span>
+        </div>
+        <div class="absolute right-0 top-10 z-20 w-56 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 shadow-xl
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+          Valor total dos pedidos com status PAGO no período selecionado.
+          <div class="absolute -top-1.5 right-3 w-3 h-3 bg-gray-800 rotate-45 rounded-sm"></div>
+        </div>
+      </div>
+    </div>
+    <p class="text-2xl font-semibold text-gray-900 mb-1">{{ formatCurrency(vendasMes) }}</p>
+    <div class="flex items-center gap-1 text-xs text-blue-600 font-medium">
+      <span class="material-symbols-outlined text-[13px]">payments</span>
+      valor total confirmado
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm">
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Total de registros</span>
+      <div class="relative group">
+        <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center cursor-help">
+          <span class="material-symbols-outlined text-[18px] text-purple-600">receipt_long</span>
+        </div>
+        <div class="absolute right-0 top-10 z-20 w-56 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 shadow-xl
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+          Todos os pedidos e orçamentos cadastrados no período, independente do status.
+          <div class="absolute -top-1.5 right-3 w-3 h-3 bg-gray-800 rotate-45 rounded-sm"></div>
+        </div>
+      </div>
+    </div>
+    <p class="text-2xl font-semibold text-gray-900 mb-1">{{ totalRegistros }}</p>
+    <div class="flex items-center gap-1 text-xs text-purple-600 font-medium">
+      <span class="material-symbols-outlined text-[13px]">list_alt</span>
+      pedidos e orçamentos
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-100 p-5 shadow-sm">
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Pendentes</span>
+      <div class="relative group">
+        <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center cursor-help">
+          <span class="material-symbols-outlined text-[18px] text-orange-500">schedule</span>
+        </div>
+        <div class="absolute right-0 top-10 z-20 w-56 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 shadow-xl
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+          Pedidos em aberto aguardando confirmação ou pagamento no período.
+          <div class="absolute -top-1.5 right-3 w-3 h-3 bg-gray-800 rotate-45 rounded-sm"></div>
+        </div>
+      </div>
+    </div>
+    <p class="text-2xl font-semibold text-gray-900 mb-1">{{ totalPendentes }}</p>
+    <div class="flex items-center gap-1 text-xs text-orange-500 font-medium">
+      <span class="material-symbols-outlined text-[13px]">hourglass_empty</span>
+      aguardando confirmação
+    </div>
+  </div>
+
+</div>
+}
+
+<!-- Gráficos -->
+<div class="grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-4 mb-6">
+
+  <!-- Donut Por Status -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-sm font-semibold text-gray-800 mb-0.5">Por Status</p>
+    <p class="text-xs text-gray-400 mb-2">Valor total das vendas</p>
+
+    <div class="min-h-[200px]">
+      @if (donutSeries.length > 0 && donutSeries.some(v => v > 0)) {
+        <div class="flex justify-center fade-in">
+          <apx-chart
+            [series]="donutSeries"
+            [chart]="donutChart"
+            [colors]="donutColors"
+            [labels]="donutLabels"
+            [legend]="donutLegend"
+            [dataLabels]="donutDataLabels"
+            [plotOptions]="donutPlotOptions"
+            [stroke]="donutStroke"
+            [tooltip]="donutTooltip"
+          />
+        </div>
+      } @else {
+        <div class="h-[200px] flex items-center justify-center text-gray-400 text-sm">
+          <span class="material-symbols-outlined text-[32px] opacity-30 mr-2">donut_large</span>
+          Sem dados
+        </div>
+      }
+    </div>
+
+    <!-- Legenda -->
+    <div class="mt-4 space-y-2.5">
+      @for (item of [
+        { label: 'Pago',      cor: 'bg-green-500', idx: 0 },
+        { label: 'Confirmado',  cor: 'bg-amber-400',  idx: 1 },
+        { label: 'Cancelado', cor: 'bg-red-500',    idx: 2 }
+      ]; track item.label) {
+        <div class="flex items-center justify-between text-sm">
+          <span class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full inline-block" [ngClass]="item.cor"></span>
+            <span class="text-gray-600">{{ item.label }}</span>
+          </span>
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-gray-800">{{ formatCurrency(donutSeries[item.idx] ?? 0) }}</span>
+            <span class="text-xs text-gray-400 w-8 text-right">
+              {{ donutTotal > 0 ? ((donutSeries[item.idx] / donutTotal) * 100 | number:'1.0-0') + '%' : '0%' }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Top Clientes -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <p class="text-sm font-semibold text-gray-800 mb-0.5">Top Clientes</p>
+    <p class="text-xs text-gray-400 mb-3">Maior volume de compras no período</p>
+
+    <div class="min-h-[220px]">
+      @if (barHSeries.length > 0 && barHSeries[0]?.data?.length > 0) {
+        <apx-chart
+          class="fade-in block"
+          [series]="barHSeries"
+          [chart]="barHChart"
+          [plotOptions]="barHPlotOptions"
+          [colors]="barHColors"
+          [dataLabels]="barHDataLabels"
+          [grid]="barHGrid"
+          [xaxis]="barHXaxis"
+          [yaxis]="barHYaxis"
+          [tooltip]="barHTooltip"
+        />
+      } @else {
+        <div class="h-[220px] flex items-center justify-center text-gray-400 text-sm">
+          <span class="material-symbols-outlined text-[32px] opacity-30 mr-2">bar_chart</span>
+          Sem dados no período
+        </div>
+      }
+    </div>
+  </div>
+
+</div>
+
+<!-- Filtros + Tabela -->
+<div class="bg-white rounded-xl border border-slate-200">
+
+  <!-- Barra de filtros -->
+  <div class="flex items-center gap-3 p-4 border-b border-slate-100 flex-wrap">
+
+
+
+    <!-- Tabs status -->
+    <div class="flex gap-1 bg-slate-100 rounded-lg p-1 overflow-x-auto whitespace-nowrap">
+      @for (s of [
+        { label: 'Todos',      value: 'TODOS'      },
+        { label: 'Orçamento',  value: 'ORCAMENTO'  },
+
+        { label: 'Confirmado', value: 'CONFIRMADO' },
+        { label: 'Pago',       value: 'PAGO'       },
+        { label: 'Cancelado',  value: 'CANCELADO'  }
+      ]; track s.value) {
+        <button
+          type="button"
+          (click)="filtro.status = $any(s.value)"
+          class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+          [ngClass]="filtro.status === s.value
+            ? 'bg-white text-gray-800 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'">
+          {{ s.label }}
+        </button>
+      }
+    </div>
+
+    <!-- Ordenação -->
+    <app-select [(ngModel)]="ordenacao" [options]="opcoesOrdenacao" placeholder="Ordenação" size="small" />
+
+    <!-- Contador -->
+    <span class="ml-auto text-xs text-gray-400">
+      {{ pedidosFiltrados.length }} registro(s)
+    </span>
+
+  </div>
+
+  <!-- Tabela -->
+  <div class="p-1">
+    <app-data-table
+      [columns]="colunasPedidos"
+      [rows]="pedidosFiltrados"
+      [loading]="loading"
+      [actions]="acoesPedidos"
+      emptyMessage="Nenhuma venda encontrada"
+      [showFiltrar]="true"
+      [filtroAtivo]="temFiltroAtivo"
+      (filtrar)="abrirModalFiltros()"
+      (verDetalhe)="abrirDetalhe($any($event))"
+      (editar)="abrirEdicao($any($event))"
+      (excluir)="onExcluirPedido($any($event))"
+      (exportPdf)="exportarPedido($any($event), 'pdf')"
+      (exportTermica)="exportarPedido($any($event), 'termica')"
+    />
+  </div>
+
+</div>
+
+<!-- Modal Nova Venda (descomentar após criar o component) -->
+  <app-novo-pedido-modal
+    [visible]="showModalCriar"
+    [produtos]="produtos"
+    [clientes]="clientes"
+    [loadingDados]="loadingModal"
+    (fechar)="fecharModalCriar()"
+    (pedidoCriado)="onPedidoCriado($event)"
+  />
+
+<!-- Modal Detalhe (descomentar após criar o component) -->
+  <app-pedido-detalhe-modal
+    [visible]="showModalDetalhe"
+    [pedido]="pedidoSelecionado"
+    [salvando]="salvando"
+    (fechar)="fecharDetalhe()"
+    (pagar)="onPagar($event)"
+    (cancelar)="onCancelar($event)"
+    (confirmar)="onConfirmarPedido($event)"
+    (parcelaPaga)="onParcelaPaga($event)"
+    (entregaMarcada)="onEntregaMarcada($event)"
+  />
+
+<!-- Modal Edição -->
+<app-pedido-edicao-modal
+  [visible]="showModalEdicao"
+  [pedido]="pedidoSelecionado"
+  [salvando]="salvando"
+  (fechar)="fecharEdicao()"
+  (salvar)="onSalvarEdicao($event)"
+/>
+
+
+<!-- Modal Filtros -->
+<app-vendas-filtros-modal
+  [visible]="showModalFiltros"
+  [pedidos]="pedidos"
+  [filtroAtual]="filtro"
+  (fechar)="fecharModalFiltros()"
+  (aplicar)="onAplicarFiltros($event)"
+  (limpar)="onLimparFiltros()"
+/>

@@ -1,0 +1,114 @@
+<p-dialog
+  header="Detalhes do lançamento"
+  [visible]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '480px' }"
+  [breakpoints]="{'768px': '95vw'}"
+  [contentStyle]="{ padding: '0' }"
+  (onHide)="onFechar()">
+
+<div class="sticky top-0 bg-white z-10">
+  <hr>
+</div>
+  @if (lancamento) {
+    <div class="flex flex-col gap-5 px-6 py-5">
+
+      <!-- Valor em destaque -->
+      <div class="rounded-xl p-4 text-center"
+        [ngClass]="lancamento.tipo === 'RECEITA' ? 'bg-green-50' : 'bg-red-50'">
+        <p class="text-xs font-semibold tracking-widest uppercase mb-1"
+          [ngClass]="lancamento.tipo === 'RECEITA' ? 'text-green-500' : 'text-red-400'">
+          {{ lancamento.tipo === 'RECEITA' ? 'Receita' : 'Despesa' }}
+        </p>
+        <p class="text-3xl font-bold"
+          [ngClass]="lancamento.tipo === 'RECEITA' ? 'text-green-700' : 'text-red-600'">
+          {{ formatCurrency(lancamento.valor) }}
+        </p>
+        <p class="text-sm text-gray-500 mt-1">{{ lancamento.descricao }}</p>
+      </div>
+
+      <!-- Detalhes -->
+      <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+
+        <div>
+          <p class="text-xs text-gray-400 mb-0.5">Categoria</p>
+          <p class="font-medium text-gray-800">{{ lancamento.categoria || '—' }}</p>
+        </div>
+
+        <div>
+          <p class="text-xs text-gray-400 mb-0.5">Status</p>
+          <p-tag [severity]="statusSeverity" [value]="statusLabel" />
+        </div>
+
+        <div>
+          <p class="text-xs text-gray-400 mb-0.5">Vencimento</p>
+          <p class="font-medium text-gray-800">{{ formatDate(lancamento.dataVencimento) }}</p>
+        </div>
+
+        <div>
+          <p class="text-xs text-gray-400 mb-0.5">Pagamento</p>
+          <p class="font-medium text-gray-800">{{ formatDate(lancamento.dataPagamento) }}</p>
+        </div>
+
+        @if (lancamento.clienteNome) {
+          <div class="col-span-2">
+            <p class="text-xs text-gray-400 mb-0.5">Cliente</p>
+            <p class="font-medium text-gray-800">{{ lancamento.clienteNome }}</p>
+          </div>
+        }
+
+        @if (lancamento.recorrencia) {
+          <div class="col-span-2">
+            <p class="text-xs text-gray-400 mb-0.5">Recorrência</p>
+            <div class="flex items-center gap-2">
+              <i class="pi pi-refresh text-blue-500 text-sm"></i>
+              <p class="font-medium text-gray-800">{{ lancamento.recorrencia }}</p>
+              @if (!lancamento.recorrenciaAtiva) {
+                <span class="text-xs text-gray-400">(cancelada)</span>
+              }
+            </div>
+          </div>
+        }
+
+        @if (lancamento.pedidoId) {
+          <div>
+            <p class="text-xs text-gray-400 mb-0.5">Origem</p>
+            <p class="text-sm font-medium text-blue-600">
+              {{ lancamento.descricao?.split(' - ')?.[0] || 'Venda' }}
+            </p>
+          </div>
+        }
+
+        @if (lancamento.locacaoId) {
+          <div>
+            <p class="text-xs text-gray-400 mb-0.5">Origem</p>
+            <p class="text-sm font-medium text-blue-600">
+              {{ lancamento.descricao?.split(' - ')?.[0] || 'Locação' }}
+            </p>
+          </div>
+        }
+
+      </div>
+
+    </div>
+  }
+
+  <!-- Footer -->
+  <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50">
+    <button type="button" (click)="onFechar()"
+      class="px-4 py-[7px] text-[13px] font-medium text-gray-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+      Fechar
+    </button>
+    @if (podePagar) {
+      <button type="button" (click)="onPagar()" [disabled]="salvando"
+        class="flex items-center gap-1.5 px-4 py-[7px] text-[13px] font-semibold text-white rounded-lg transition-colors cursor-pointer"
+        [ngClass]="salvando ? 'bg-green-300 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'">
+        <i class="pi pi-check text-xs"></i>
+        {{ salvando ? 'Registrando...' : 'Registrar pag.' }}
+      </button>
+    }
+  </div>
+
+</p-dialog>

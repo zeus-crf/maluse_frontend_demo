@@ -1,0 +1,78 @@
+@import "primeicons/primeicons.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Material Symbols: reserva de espaço p/ evitar CLS ────────────
+   Cada ícone ocupa exatamente 1em de largura. Enquanto a fonte de
+   ícones não carrega, isso impede que o texto do ligature ("storefront")
+   expanda a caixa e depois colapse para o ícone (salto de layout). */
+.material-symbols-outlined {
+  display: inline-block;
+  width: 1em;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* ── Fade-in de conteúdo (só opacity → não causa layout shift) ──── */
+@keyframes contentFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.fade-in {
+  animation: contentFadeIn 0.35s ease-out both;
+}
+
+/* ── PrimeNG DatePicker – overrides globais ──────────────────── */
+
+/* Dia selecionado: azul em vez do verde padrão do Aura */
+.p-datepicker-day-selected .p-datepicker-day-cell-content,
+.p-datepicker-day[data-p-selected="true"] .p-datepicker-day-cell-content,
+.p-datepicker-day.p-highlight .p-datepicker-day-cell-content {
+  background: #3b82f6 !important;
+  color: #fff !important;
+  border-color: #3b82f6 !important;
+}
+
+/* "Hoje" sem destaque verde */
+.p-datepicker-day-today .p-datepicker-day-cell-content {
+  border-color: #3b82f6 !important;
+  color: #3b82f6 !important;
+}
+
+/* Ícone do calendário: azul */
+.p-datepicker-calendar-button .pi,
+.p-datepicker-button .pi {
+  color: #3b82f6 !important;
+}
+
+.p-dialog hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 0;
+}
+
+.p-dialog {
+  overflow: hidden;
+}
+
+/* Layout — oculta scrollbar sem perder o scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@media print {
+  /* Esconde tudo exceto os componentes de comprovante */
+  body > app-root > *:not(app-pedido-comprovante):not(app-locacao-comprovante) {
+    display: none !important;
+  }
+  app-pedido-comprovante,
+  app-locacao-comprovante {
+    display: block !important;
+  }
+}

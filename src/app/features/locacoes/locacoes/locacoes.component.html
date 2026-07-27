@@ -1,0 +1,387 @@
+<!-- ── Header ──────────────────────────────────────────────── -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Locações</h1>
+    <p class="text-sm text-gray-400 mt-0.5">Gestão de equipamentos alugados</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <button
+      (click)="abrirModalFiltros()"
+      class="flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded-xl transition-colors"
+      [ngClass]="temFiltroAtivo
+        ? 'border-blue-400 text-blue-600 bg-blue-50'
+        : 'border-slate-200 text-gray-600 bg-white hover:bg-slate-50'">
+      <span class="material-symbols-outlined text-[18px]">tune</span>
+      Filtros
+      @if (temFiltroAtivo) {
+        <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+
+      }
+    </button>
+    <button
+      (click)="abrirModalCriar()"
+      class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">
+      <span class="material-symbols-outlined text-[18px]">add</span>
+      Nova Locação
+    </button>
+  </div>
+</div>
+
+<!-- ── Período ─────────────────────────────────────────────── -->
+<div class="flex pb-2 px-2">
+<!-- Filtro de Período -->
+ @if (periodoAtivo !== 'custom') {
+      <span class="ml-auto text-xs text-gray-400  whitespace-nowrap">{{ filtro.inicio }} → {{  filtro.fim }}</span>
+    }
+
+</div>
+<div class="bg-white rounded-xl border border-slate-200 px-4 py-3 mb-6">
+
+    <!-- Linha 1: label + botões de período + range de datas (quando não custom) -->
+  <div class="flex flex-col gap-3">
+    <div>
+      <span class="text-[11px] font-semibold text-gray-400 tracking-widest">PERÍODO</span>
+    </div>
+
+    <div>
+      @for (p of periodos; track p.value) {
+        <button (click)="selectPeriodo(p.value)" [ngClass]="periodoButtonClass(p.value)">
+          {{ p.label }}
+        </button>
+      }
+    </div>
+    <!-- @if (periodoAtivo !== 'custom') {
+      <span class="ml-auto text-xs text-gray-400 whitespace-nowrap">{{ inicio }} – {{ fim }}</span>
+    } -->
+  </div>
+
+
+  @if (periodoAtivo === 'custom') {
+    <div class="mt-3 pt-3 border-t border-slate-100">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs text-gray-400">De</span>
+        <div class="w-32"><app-date-picker [(ngModel)]="customInicio" [compact]="true" /></div>
+        <span class="text-xs text-gray-400">até</span>
+        <div class="w-32"><app-date-picker [(ngModel)]="customFim" [compact]="true" /></div>
+        <button (click)="aplicarPeriodoCustom()"
+          class="hidden min-[480px]:inline-flex items-center px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+          Aplicar
+        </button>
+        <button (click)="onLimparFiltros()"
+          class="hidden min-[480px]:inline-flex items-center"
+          [ngClass]="limparFiltroButtonClass(periodoAtivo)">
+          <span class="material-symbols-outlined text-[13px] align-middle mr-0.5">close</span>
+          Limpar
+        </button>
+      </div>
+      <div class="flex min-[480px]:hidden gap-2 mt-2">
+        <button (click)="aplicarPeriodoCustom()"
+          class="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+          Aplicar
+        </button>
+        <button (click)="onLimparFiltros()" [ngClass]="limparFiltroButtonClass(periodoAtivo)">
+          <span class="material-symbols-outlined text-[13px] align-middle mr-0.5">close</span>
+          Limpar
+        </button>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ── Alertas de Urgência ─────────────────────────────────── -->
+@if (temAlertas) {
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
+
+    <!-- Card: Atrasadas -->
+    @if (alertasAtrasadas.length > 0) {
+      <div class="bg-white rounded-xl border border-slate-200">
+        <div class="flex items-center gap-2.5 px-4 py-3 bg-red-50 border-b border-red-100">
+          <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+          <span class="text-xs font-semibold text-red-800 tracking-wide uppercase">
+            Atrasadas — devolução não realizada
+          </span>
+          <span class="ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+            {{ alertasAtrasadas.length }}
+          </span>
+        </div>
+        @for (loc of alertasAtrasadas; track loc.id) {
+          <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors">
+            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-[11px] font-semibold text-red-700 flex-shrink-0 select-none">
+              {{ loc.clienteNome.slice(0, 2).toUpperCase() }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800 truncate">{{ loc.clienteNome }}</p>
+              <p class="text-[11px] text-gray-400 truncate">
+                {{ loc.itens[0]?.produtoNome ?? '—' }}
+                @if (loc.itens.length > 1) {
+                  <span>+{{ loc.itens.length - 1 }}</span>
+                }
+                · devia em {{ loc.dataDevolucaoPrevista | date:'dd/MM' }}
+              </p>
+            </div>
+            <span class="text-xs font-semibold text-red-600 whitespace-nowrap flex-shrink-0">
+              +{{ diasEmAtraso(loc) }}d
+            </span>
+            <button
+              (click)="onDevolver(loc)"
+              [disabled]="salvando"
+              class="text-[11px] font-medium px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors whitespace-nowrap flex-shrink-0">
+              Devolver
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Card: Vencendo em breve -->
+    @if (alertasVencendo.length > 0) {
+      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="flex items-center gap-2.5 px-4 py-3 bg-amber-50 border-b border-amber-100">
+          <span class="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0"></span>
+          <span class="text-xs font-semibold text-amber-800 tracking-wide uppercase">
+            Vencem nos próximos 3 dias
+          </span>
+          <span class="ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+            {{ alertasVencendo.length }}
+          </span>
+        </div>
+        @for (loc of alertasVencendo; track loc.id) {
+          <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition-colors">
+            <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-[11px] font-semibold text-amber-700 flex-shrink-0 select-none">
+              {{ loc.clienteNome.slice(0, 2).toUpperCase() }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800 truncate">{{ loc.clienteNome }}</p>
+              <p class="text-[11px] text-gray-400 truncate">
+                {{ loc.itens[0]?.produtoNome ?? '—' }}
+                @if (loc.itens.length > 1) {
+                  <span>+{{ loc.itens.length - 1 }}</span>
+                }
+                · vence em {{ loc.dataDevolucaoPrevista | date:'dd/MM' }}
+              </p>
+            </div>
+            <span class="text-xs font-semibold text-amber-600 whitespace-nowrap flex-shrink-0">
+              @if (diasParaVencer(loc) === 0) { Hoje }
+              @else { {{ diasParaVencer(loc) }}d }
+            </span>
+            <button
+              (click)="abrirDetalhe(loc)"
+              class="text-[11px] font-medium px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors whitespace-nowrap flex-shrink-0">
+              Ver
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+}
+
+<!-- ── KPIs ─────────────────────────────────────────────────── -->
+@if (loading) {
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3 min-h-[72px] animate-pulse">
+        <div class="w-9 h-9 rounded-lg bg-slate-100 flex-shrink-0"></div>
+        <div class="flex-1">
+          <div class="h-6 w-12 bg-slate-100 rounded mb-1.5"></div>
+          <div class="h-3 w-16 bg-slate-100 rounded"></div>
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 fade-in">
+
+  <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
+    <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+      <span class="material-symbols-outlined text-[20px] text-blue-600">inventory_2</span>
+    </div>
+    <div>
+      <p class="text-2xl font-bold text-gray-900">{{ totalAtivas }}</p>
+      <p class="text-[11px] text-gray-400 font-medium">Ativas</p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
+    <div class="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+      <span class="material-symbols-outlined text-[20px] text-red-500">alarm</span>
+    </div>
+    <div>
+      <p class="text-2xl font-bold transition-colors"
+        [ngClass]="totalAtrasadas > 0 ? 'text-red-600' : 'text-gray-900'">
+        {{ totalAtrasadas }}
+      </p>
+      <p class="text-[11px] text-gray-400 font-medium">Atrasadas</p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
+    <div class="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+      <span class="material-symbols-outlined text-[20px] text-green-600">check_circle</span>
+    </div>
+    <div>
+      <p class="text-2xl font-bold text-gray-900">{{ totalDevolvidas }}</p>
+      <p class="text-[11px] text-gray-400 font-medium">Devolvidas</p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
+    <div class="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+      <span class="material-symbols-outlined text-[20px] text-slate-500">payments</span>
+    </div>
+    <div>
+      <p class="text-lg font-bold text-gray-900 leading-tight">{{ formatCurrency(faturamentoMes) }}</p>
+      <p class="text-[11px] text-gray-400 font-medium">Faturamento no período</p>
+    </div>
+  </div>
+
+</div>
+}
+
+<!-- ── Gráficos ────────────────────────────────────────────── -->
+<div class="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-4 mb-6">
+
+  <!-- Faturamento mensal -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <p class="text-sm font-semibold text-gray-800">Faturamento mensal</p>
+        <p class="text-[11px] text-gray-400 mt-0.5">Receita por mês no período selecionado</p>
+      </div>
+      <span class="material-symbols-outlined text-[18px] text-slate-300">bar_chart</span>
+    </div>
+    <div style="height: 200px">
+      <apx-chart
+        [series]="barSeries"
+        [chart]="barChart"
+        [xaxis]="barXAxis"
+        [yaxis]="barYAxis"
+        [plotOptions]="barPlotOptions"
+        [dataLabels]="barDataLabels"
+        [grid]="barGrid"
+        [tooltip]="barTooltip"
+        [colors]="['#2563eb']"
+      />
+    </div>
+  </div>
+
+  <!-- Distribuição de status -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <p class="text-sm font-semibold text-gray-800">Status</p>
+        <p class="text-[11px] text-gray-400 mt-0.5">Distribuição no período</p>
+      </div>
+      <span class="material-symbols-outlined text-[18px] text-slate-300">donut_large</span>
+    </div>
+    <div style="height: 200px">
+      <apx-chart
+        [series]="donutSeries"
+        [chart]="donutChart"
+        [labels]="donutLabels"
+        [colors]="donutColors"
+        [legend]="donutLegend"
+        [dataLabels]="donutDataLabels"
+        [plotOptions]="donutPlotOptions"
+        [stroke]="donutStroke"
+      />
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Tabela ──────────────────────────────────────────────── -->
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+
+  <!-- Toolbar -->
+  <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-100 flex-wrap">
+
+    <!-- Pills de status rápido -->
+    <div class="flex gap-1 bg-slate-100 rounded-lg p-1 overflow-x-auto whitespace-nowrap">
+      @for (s of [
+        { label: 'Todas',      value: 'TODOS'     },
+        { label: 'Ativas',     value: 'ATIVA'     },
+        { label: 'Atrasadas',  value: 'ATRASADA'  },
+        { label: 'Devolvidas', value: 'DEVOLVIDA' },
+        { label: 'Canceladas', value: 'CANCELADA' }
+      ]; track s.value) {
+
+        <button
+          (click)="filtro.status = $any(s.value)"
+          class="shrink-0 px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+          [ngClass]="filtro.status === s.value
+            ? 'bg-white text-gray-800 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'">
+          {{ s.label }}
+        </button>
+      }
+    </div>
+
+    <!-- Ordenação -->
+    <app-select [(ngModel)]="ordenacao" [options]="opcoesOrdenacao" placeholder="Ordenação" size="small" />
+
+    <!-- Contador -->
+    <span class="ml-auto text-xs text-gray-400 whitespace-nowrap">
+      {{ locacoesFiltradas.length }} registro(s)
+    </span>
+  </div>
+
+  <!-- Tabela de dados -->
+  <div class="p-1">
+    <app-data-table
+      [columns]="colunasLocacoes"
+      [rows]="locacoesFiltradas"
+      [loading]="loading"
+      [actions]="acoesLocacoes"
+      emptyMessage="Nenhuma locação encontrada"
+      [showFiltrar]="true"
+      [filtroAtivo]="temFiltroAtivo"
+      (filtrar)="abrirModalFiltros()"
+      (extra)="abrirModalEdicao($any($event))"
+      (verDetalhe)="abrirDetalhe($any($event))"
+      (apagar)="onApagar($any($event))"
+      (exportPdf)="exportarLocacao($any($event), 'pdf')"
+      (exportTermica)="exportarLocacao($any($event), 'termica')"
+    />
+  </div>
+
+</div>
+
+<!-- Modal Nova Locação — a implementar -->
+<app-nova-locacao-modal
+  [visible]="showModalCriar"
+  [produtos]="produtos"
+  [clientes]="clientes"
+  [loadingDados]="loadingModal"
+  (fechar)="fecharModalCriar()"
+  (locacaoCriada)="onLocacaoCriada($event)"
+/>
+
+<app-locacao-detalhe-modal
+  [visible]="showModalDetalhe"
+  [locacao]="locacaoSelecionada"
+  [salvando]="salvando"
+  (fechar)="fecharDetalhe()"
+  (devolver)="onDevolver($event)"
+  (cancelar)="onCancelar($event)"
+  (confirmar)="onConfirmarLocacao($event)"
+  (parcelaPaga)="onParcelaPaga()"
+  (entregaMarcada)="onEntregaMarcada($event)"
+/>
+
+<app-locacao-edicao-modal
+  [visible]="showModalEdicao"
+  [locacao]="locacaoSelecionada"
+  [salvando]="salvandoEdicao"
+  (fechar)="fecharModalEdicao()"
+  (salvar)="onLocacaoEditada($event)"
+/>
+
+<app-locacao-filtros-modal
+  [visible]="showModalFiltros"
+  [filtroAtual]="filtro"
+  (fechar)="fecharModalFiltros()"
+  (aplicar)="onAplicarFiltros($event)"
+  (limpar)="onLimparFiltros()"
+/>

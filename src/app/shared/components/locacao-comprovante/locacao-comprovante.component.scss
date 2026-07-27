@@ -1,0 +1,95 @@
+/* Escondido na tela */
+:host {
+  display: none;
+}
+
+/* Visível somente ao imprimir */
+@media print {
+  :host {
+    display: block;
+    width: 100%;
+    font-family: sans-serif;
+    font-size: 18px;
+    color: #000;
+  }
+
+  /* Térmica: conteúdo alinhado à esquerda ocupando a largura da bobina */
+  .termica {
+    font-family: monospace;
+    font-size: 18px;
+    max-width: 74mm;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .termica .total-linha.destaque {
+    font-size: 16px;
+  }
+
+  .secao {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .secao:last-child {
+    border-bottom: none;
+  }
+
+  .label {
+    font-size: 13px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 4px;
+  }
+
+  .grid-itens {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+
+  /* Térmica: nomes longos quebram a linha em vez de esticar a tabela */
+  .termica .grid-itens {
+    table-layout: fixed;
+  }
+
+  .termica .grid-itens td {
+    word-break: break-word;
+  }
+
+  .grid-itens th {
+    text-align: left;
+    font-size: 13px;
+    color: #666;
+    border-bottom: 1px solid #ccc;
+    padding: 4px 0;
+  }
+
+  .grid-itens td {
+    padding: 5px 0;
+    border-bottom: 1px dotted #ddd;
+  }
+
+  .total-linha {
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    margin: 3px 0;
+  }
+
+  .total-linha.destaque {
+    font-size: 17px;
+    font-weight: bold;
+    border-top: 1px solid #000;
+    padding-top: 6px;
+    margin-top: 6px;
+  }
+
+  .rodape {
+    text-align: center;
+    font-size: 13px;
+    color: #888;
+    margin-top: 16px;
+  }
+}

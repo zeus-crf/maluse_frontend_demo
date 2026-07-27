@@ -1,0 +1,309 @@
+<p-dialog
+  [header]="cliente ? 'Histórico — ' + cliente.nome : 'Histórico'"
+  [visible]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '620px' }"
+  [breakpoints]="{'768px': '95vw'}"
+  [contentStyle]="{ padding: '0' }"
+  (onHide)="onFechar()">
+
+  <div class="sticky top-0 bg-white z-10"><hr></div>
+
+  <div class="flex flex-col" style="min-height: 360px;">
+
+    <!-- Tabs -->
+    <div class="flex border-b border-slate-200 px-6 pt-4 gap-1">
+      <button type="button"
+        (click)="tabAtiva = 'vendas'"
+        class="px-4 py-2 text-[13px] font-medium border-b-2 transition-colors -mb-px"
+        [class.border-blue-600]="tabAtiva === 'vendas'"
+        [class.text-blue-600]="tabAtiva === 'vendas'"
+        [class.border-transparent]="tabAtiva !== 'vendas'"
+        [class.text-gray-500]="tabAtiva !== 'vendas'"
+        [class.hover:text-gray-700]="tabAtiva !== 'vendas'">
+        <i class="pi pi-shopping-cart mr-1.5 text-xs"></i>
+        Vendas
+        @if (historico) {
+          <span class="ml-1.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-full"
+            [class.bg-blue-100]="tabAtiva === 'vendas'"
+            [class.text-blue-600]="tabAtiva === 'vendas'"
+            [class.bg-slate-100]="tabAtiva !== 'vendas'"
+            [class.text-gray-400]="tabAtiva !== 'vendas'">
+            {{ historico.pedidos.length }}
+          </span>
+        }
+      </button>
+      <button type="button"
+        (click)="tabAtiva = 'locacoes'"
+        class="px-4 py-2 text-[13px] font-medium border-b-2 transition-colors -mb-px"
+        [class.border-blue-600]="tabAtiva === 'locacoes'"
+        [class.text-blue-600]="tabAtiva === 'locacoes'"
+        [class.border-transparent]="tabAtiva !== 'locacoes'"
+        [class.text-gray-500]="tabAtiva !== 'locacoes'"
+        [class.hover:text-gray-700]="tabAtiva !== 'locacoes'">
+        <i class="pi pi-box mr-1.5 text-xs"></i>
+        Locações
+        @if (historico) {
+          <span class="ml-1.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-full"
+            [class.bg-blue-100]="tabAtiva === 'locacoes'"
+            [class.text-blue-600]="tabAtiva === 'locacoes'"
+            [class.bg-slate-100]="tabAtiva !== 'locacoes'"
+            [class.text-gray-400]="tabAtiva !== 'locacoes'">
+            {{ historico.locacoes.length }}
+          </span>
+        }
+      </button>
+      <button type="button"
+        (click)="tabAtiva = 'divida'"
+        class="px-4 py-2 text-[13px] font-medium border-b-2 transition-colors -mb-px"
+        [class.border-blue-600]="tabAtiva === 'divida'"
+        [class.text-blue-600]="tabAtiva === 'divida'"
+        [class.border-transparent]="tabAtiva !== 'divida'"
+        [class.text-gray-500]="tabAtiva !== 'divida'"
+        [class.hover:text-gray-700]="tabAtiva !== 'divida'">
+        <i class="pi pi-wallet mr-1.5 text-xs"></i>
+        Dívida
+        @if (saldo && saldo.saldoDevedor > 0) {
+          <span class="ml-1.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600">
+            {{ formatCurrency(saldo.saldoDevedor) }}
+          </span>
+        }
+      </button>
+      <button type="button"
+        (click)="tabAtiva = 'observacoes'"
+        class="px-4 py-2 text-[13px] font-medium border-b-2 transition-colors -mb-px"
+        [class.border-blue-600]="tabAtiva === 'observacoes'"
+        [class.text-blue-600]="tabAtiva === 'observacoes'"
+        [class.border-transparent]="tabAtiva !== 'observacoes'"
+        [class.text-gray-500]="tabAtiva !== 'observacoes'"
+        [class.hover:text-gray-700]="tabAtiva !== 'observacoes'">
+        <i class="pi pi-comment mr-1.5 text-xs"></i>
+        Observações
+        @if (observacoes.length > 0) {
+          <span class="ml-1.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-full"
+            [class.bg-blue-100]="tabAtiva === 'observacoes'"
+            [class.text-blue-600]="tabAtiva === 'observacoes'"
+            [class.bg-slate-100]="tabAtiva !== 'observacoes'"
+            [class.text-gray-400]="tabAtiva !== 'observacoes'">
+            {{ observacoes.length }}
+          </span>
+        }
+      </button>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="flex-1 px-6 py-4">
+
+      @if (loading) {
+        <div class="flex items-center justify-center gap-2 text-[13px] text-gray-400 py-10">
+          <i class="pi pi-spin pi-spinner text-sm"></i>
+          Carregando...
+        </div>
+      } @else if (historico) {
+
+        <!-- Aba Vendas -->
+        @if (tabAtiva === 'vendas') {
+          @if (historico.pedidos.length === 0) {
+            <div class="flex flex-col items-center justify-center gap-2 py-12 text-gray-300">
+              <i class="pi pi-shopping-cart text-4xl"></i>
+              <p class="text-[13px]">Nenhuma venda encontrada</p>
+            </div>
+          } @else {
+            <div class="border border-slate-200 rounded-lg overflow-hidden">
+              <!-- Cabeçalho -->
+              <div class="grid grid-cols-[56px_1fr_100px_108px] gap-2 bg-slate-50 border-b border-slate-200 px-3 py-[7px]">
+                <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Nº</div>
+                <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Status</div>
+                <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Data</div>
+                <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] text-right">Total</div>
+              </div>
+              @for (p of historico.pedidos; track p.id; let last = $last) {
+                <div class="grid grid-cols-[56px_0.7fr_100px_108px] gap-2 items-center px-3 py-[10px]"
+                  [class.border-b]="!last"
+                  [class.border-slate-100]="!last">
+                  <span class="text-[12px] text-gray-400 font-mono">#{{ p.numero }}</span>
+                  <p-tag [value]="statusPedidoLabel(p.status)" [severity]="statusPedidoSeverity(p.status)" />
+                  <span class="text-[12px] text-gray-500">{{ formatDate(p.dataMovimento) }}</span>
+                  <span class="text-[13px] font-semibold text-gray-800 font-mono text-right">{{ formatCurrency(p.valorTotal) }}</span>
+                </div>
+              }
+            </div>
+          }
+        }
+
+        <!-- Aba Locações -->
+        @if (tabAtiva === 'locacoes') {
+          @if (historico.locacoes.length === 0) {
+            <div class="flex flex-col items-center justify-center gap-2 py-12 text-gray-300">
+              <i class="pi pi-box text-4xl"></i>
+              <p class="text-[13px]">Nenhuma locação encontrada</p>
+            </div>
+          } @else {
+            <div class="border border-slate-200 rounded-lg overflow-hidden">
+              <!-- Cabeçalho -->
+              <div class="grid grid-cols-[56px_1fr_100px_108px] gap-2 bg-slate-50 border-b border-slate-200 px-3 py-[7px]">
+                <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Nº</div>
+                <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Status</div>
+                <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Retirada</div>
+                <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] text-right">Total</div>
+              </div>
+              @for (l of historico.locacoes; track l.id; let last = $last) {
+                <div class="grid grid-cols-[56px_0.7fr_100px_108px] gap-2 items-center px-3 py-[10px]"
+                  [class.border-b]="!last"
+                  [class.border-slate-100]="!last">
+                  <span class="text-[12px] text-gray-400 font-mono">#{{ l.numero }}</span>
+                  <p-tag [value]="statusLocacaoLabel(l.status)" [severity]="statusLocacaoSeverity(l.status)" />
+                  <span class="text-[12px] text-gray-500">{{ formatDate(l.dataRetirada) }}</span>
+                  <span class="text-[13px] font-semibold text-gray-800 font-mono text-right">{{ formatCurrency(l.valorTotal) }}</span>
+                </div>
+              }
+            </div>
+          }
+        }
+
+        <!-- Aba Dívida -->
+        @if (tabAtiva === 'divida') {
+
+          <!-- Saldo devedor -->
+          <div class="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3 mb-4"
+            [class.bg-red-50]="saldo && saldo.saldoDevedor > 0"
+            [class.bg-emerald-50]="!saldo || saldo.saldoDevedor <= 0">
+            <span class="text-[13px] font-medium text-gray-600">Saldo devedor</span>
+            <span class="text-[16px] font-bold font-mono"
+              [class.text-red-600]="saldo && saldo.saldoDevedor > 0"
+              [class.text-emerald-600]="!saldo || saldo.saldoDevedor <= 0">
+              {{ formatCurrency(saldo?.saldoDevedor ?? 0) }}
+            </span>
+          </div>
+
+          @if (saldo && saldo.saldoDevedor > 0) {
+            <!-- Débito -->
+            <div class="flex items-end gap-2 mb-1">
+              <div class="flex-1">
+                <label class="block text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-1">Debitar valor</label>
+                <input type="number" min="0.01" step="0.01" [max]="saldo.saldoDevedor"
+                  [(ngModel)]="valorDebito" placeholder="0,00"
+                  class="w-full text-[13px] px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500" />
+              </div>
+              <button type="button" (click)="debitar()"
+                [disabled]="debitando || !valorDebito || valorDebito <= 0"
+                class="px-4 py-2 text-[13px] font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">
+                {{ debitando ? 'Debitando...' : 'Debitar' }}
+              </button>
+            </div>
+            <p class="text-[11px] text-gray-400 mb-4">O valor é abatido do mais antigo até completá-lo.</p>
+          }
+
+          <!-- Histórico de abatimentos — fora do @if do saldo de propósito: continua visível
+               depois que o cliente quita tudo, senão some justamente o rastro de quem pagou -->
+          @if (abatimentos.length > 0) {
+            <p class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Abatimentos</p>
+            <div class="border border-slate-200 rounded-lg overflow-hidden mb-4">
+              @for (ab of abatimentos; track ab.id; let last = $last) {
+                <div class="grid grid-cols-[92px_1fr_auto] gap-2 items-center px-3 py-[10px]"
+                  [class.border-b]="!last" [class.border-slate-100]="!last"
+                  [class.opacity-50]="ab.estornado">
+                  <span class="text-[12px] text-gray-500">{{ formatDate(ab.data) }}</span>
+                  <span class="text-[13px] font-semibold text-gray-800 font-mono">{{ formatCurrency(ab.valor) }}</span>
+                  @if (ab.estornado) {
+                    <span class="text-[11px] text-gray-400">Estornado</span>
+                  } @else {
+                    <button type="button" (click)="estornar(ab.id)"
+                      class="text-[11px] text-red-600 hover:underline cursor-pointer">Estornar</button>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          @if (saldo && saldo.saldoDevedor > 0) {
+            <!-- Itens em aberto -->
+            <p class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Em aberto</p>
+            <div class="border border-slate-200 rounded-lg overflow-hidden">
+              <div class="grid grid-cols-[1fr_92px_100px] gap-2 bg-slate-50 border-b border-slate-200 px-3 py-[7px]">
+                <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Origem</div>
+                <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Data</div>
+                <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] text-right">Saldo</div>
+              </div>
+              <!-- track por índice: um pedido parcelado tem várias parcelas em aberto,
+                   todas com o mesmo origemId — usar origemId daria chave duplicada -->
+              @for (it of saldo.itens; track $index; let last = $last) {
+                <div class="grid grid-cols-[1fr_92px_100px] gap-2 items-center px-3 py-[10px]"
+                  [class.border-b]="!last" [class.border-slate-100]="!last">
+                  <span class="text-[12px] text-gray-600">{{ origemLabel(it) }}</span>
+                  <span class="text-[12px] text-gray-500">{{ formatDate(it.data) }}</span>
+                  <span class="text-[13px] font-semibold text-gray-800 font-mono text-right">{{ formatCurrency(it.saldo) }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="flex flex-col items-center justify-center gap-2 py-8 text-gray-300">
+              <i class="pi pi-check-circle text-4xl"></i>
+              <p class="text-[13px]">Nenhuma dívida em aberto</p>
+            </div>
+          }
+        }
+
+        <!-- Aba Observações -->
+        @if (tabAtiva === 'observacoes') {
+
+          <!-- Nova observação -->
+          <div class="mb-4">
+            <textarea [(ngModel)]="novaObservacao" rows="3" maxlength="1000"
+              placeholder="Escreva uma observação sobre este cliente..."
+              class="w-full text-[13px] px-3 py-2 border border-slate-200 rounded-lg resize-none focus:outline-none focus:border-blue-500"></textarea>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-[11px] text-gray-400">{{ novaObservacao.length }}/1000</span>
+              <button type="button" (click)="adicionarObservacao()"
+                [disabled]="salvandoObservacao || !novaObservacao.trim()"
+                class="px-4 py-[7px] text-[13px] font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">
+                {{ salvandoObservacao ? 'Salvando...' : 'Adicionar' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista -->
+          @if (observacoes.length === 0) {
+            <div class="flex flex-col items-center justify-center gap-2 py-10 text-gray-300">
+              <i class="pi pi-comment text-4xl"></i>
+              <p class="text-[13px]">Nenhuma observação registrada</p>
+            </div>
+          } @else {
+            <div class="flex flex-col gap-2">
+              @for (obs of observacoes; track obs.id) {
+                <div class="border border-slate-200 rounded-lg px-3 py-[10px]">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-[11px] text-gray-400">
+                      {{ formatDateTime(obs.criadaEm) }} · {{ obs.autorNome }}
+                    </span>
+                    <button type="button" (click)="confirmarRemocaoObservacao(obs)"
+                      class="text-gray-300 hover:text-red-600 transition-colors cursor-pointer"
+                      aria-label="Apagar observação">
+                      <i class="pi pi-trash text-xs"></i>
+                    </button>
+                  </div>
+                  <p class="text-[13px] text-gray-700 whitespace-pre-wrap break-words">{{ obs.texto }}</p>
+                </div>
+              }
+            </div>
+          }
+        }
+
+      }
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="flex items-center justify-end px-6 py-4 border-t border-slate-100 bg-slate-50">
+    <button type="button" (click)="onFechar()"
+      class="px-4 py-[7px] text-[13px] font-medium text-gray-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+      Fechar
+    </button>
+  </div>
+
+</p-dialog>
+
+<!-- appendTo="body" evita o diálogo ficar atrás do modal (conflito de z-index) -->
+<p-confirmdialog appendTo="body" />

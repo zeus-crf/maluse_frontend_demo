@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Marluse</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- Preconnect reduz latência de DNS/TLS das fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- display=swap evita bloqueio de renderização enquanto a fonte carrega -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <!-- Material Symbols com eixos fixos (@24,400,0,0) em vez do range completo:
+       antes baixava a fonte variável inteira (muito pesada), agora só o necessário.
+       display=block: durante o carregamento o glifo fica invisível em vez de mostrar
+       o texto do ligature ("storefront", "download") e depois colapsar — evita o CLS. -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet"/>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

@@ -1,0 +1,445 @@
+<!-- Header -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+    <p class="text-xs text-gray-400 mt-0.5">{{ inicio }} – {{ fim }}</p>
+  </div>
+  <!-- <button class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+    <span class="material-symbols-outlined text-[16px]">download</span>
+    Exportar
+  </button> -->
+</div>
+
+<div class="flex pb-2 px-2">
+  <!-- Filtro de Período -->
+  @if (periodoAtivo !== 'custom') {
+        <span class="ml-auto text-xs text-gray-400  whitespace-nowrap">{{ inicio }} → {{ fim }}</span>
+      }
+
+</div>
+<!-- Filtros de Período -->
+<div class="bg-white rounded-xl border border-slate-200 px-4 py-3 mb-6">
+
+
+  <!-- Linha 1: label + botões de período + range de datas (quando não custom) -->
+  <div class="flex flex-col gap-3">
+    <div>
+      <span class="text-[11px] font-semibold text-gray-400 tracking-widest">PERÍODO</span>
+    </div>
+
+    <div>
+      @for (p of periodos; track p.value) {
+        <button (click)="selectPeriodo(p.value)" [ngClass]="periodoButtonClass(p.value)">
+          {{ p.label }}
+        </button>
+      }
+    </div>
+    <!-- @if (periodoAtivo !== 'custom') {
+      <span class="ml-auto text-xs text-gray-400 whitespace-nowrap">{{ inicio }} – {{ fim }}</span>
+    } -->
+  </div>
+
+  <!-- Linha 2: datepickers (apenas quando custom) -->
+  @if (periodoAtivo === 'custom') {
+    <div class="mt-3 pt-3 border-t border-slate-100">
+
+      <!-- Datepickers + botões (inline em ≥480px) -->
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs text-gray-400">De</span>
+        <div class="w-32"><app-date-picker [(ngModel)]="inicio" [compact]="true" /></div>
+        <span class="text-xs text-gray-400">até</span>
+        <div class="w-32"><app-date-picker [(ngModel)]="fim" [compact]="true" /></div>
+
+        <!-- Botões inline só em ≥480px -->
+        <button (click)="aplicarFiltroCustom()"
+          class="hidden min-[480px]:inline-flex items-center px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+          Aplicar
+        </button>
+        <button (click)="limparFiltro()"
+          class="hidden min-[480px]:inline-flex items-center"
+          [ngClass]="limparFiltroButtonClass(periodoAtivo)">
+          <span class="material-symbols-outlined text-[13px] align-middle mr-0.5">close</span>
+          Limpar
+        </button>
+      </div>
+
+      <!-- Botões abaixo em <480px -->
+      <div class="flex min-[480px]:hidden gap-2 mt-2">
+        <button (click)="aplicarFiltroCustom()"
+          class="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+          Aplicar
+        </button>
+        <button (click)="limparFiltro()" [ngClass]="limparFiltroButtonClass(periodoAtivo)">
+          <span class="material-symbols-outlined text-[13px] align-middle mr-0.5">close</span>
+          Limpar
+        </button>
+      </div>
+
+    </div>
+  }
+
+</div>
+
+<!-- KPI Cards -->
+@if (kpis) {
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 fade-in">
+
+    <!-- Receita do Período -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-col overflow-hidden min-h-[180px]">
+      <div class="flex items-start justify-between mb-2">
+        <p class="text-[11px] font-semibold text-gray-400 tracking-widest uppercase">Receita do Período</p>
+        <div class="relative group">
+          <button class="p-1 text-gray-300 hover:text-blue-500 transition-colors cursor-help">
+            <span class="material-symbols-outlined text-[16px]">show_chart</span>
+          </button>
+          <div class="absolute right-0 top-8 z-20 w-56 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 shadow-xl
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+            Total de receitas registradas no período selecionado, incluindo vendas e locações.
+            <div class="absolute -top-1.5 right-3 w-3 h-3 bg-gray-800 rotate-45 rounded-sm"></div>
+          </div>
+        </div>
+      </div>
+      <p class="text-2xl font-bold text-gray-900 mb-1">{{ formatCurrency(kpis.receitaPeriodo) }}</p>
+      <p class="text-xs text-gray-400 font-medium mb-3">Total de receitas no período</p>
+      <apx-chart
+        [series]="receitaSpark.series" [chart]="receitaSpark.chart"
+        [stroke]="receitaSpark.stroke" [colors]="receitaSpark.colors"
+        [tooltip]="receitaSpark.tooltip" />
+    </div>
+
+    <!-- Vendas -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-col overflow-hidden min-h-[180px]">
+      <div class="flex items-start justify-between mb-2">
+        <p class="text-[11px] font-semibold text-gray-400 tracking-widest uppercase">Vendas no Período</p>
+        <div class="relative group">
+          <button class="p-1 text-gray-300 hover:text-green-500 transition-colors cursor-help">
+            <span class="material-symbols-outlined text-[16px]">point_of_sale</span>
+          </button>
+          <div class="absolute right-0 top-8 z-20 w-56 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 shadow-xl
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+            Valor total dos pedidos de venda confirmados (status PAGO) no período selecionado.
+            <div class="absolute -top-1.5 right-3 w-3 h-3 bg-gray-800 rotate-45 rounded-sm"></div>
+          </div>
+        </div>
+      </div>
+      <p class="text-2xl font-bold text-gray-900 mb-1">{{ formatCurrency(kpis.vendasValor) }}</p>
+      <p class="text-xs text-gray-400 font-medium mb-3">{{ kpis.vendasQuantidade }} pedido(s) confirmado(s)</p>
+      <apx-chart
+        [series]="vendasSpark.series" [chart]="vendasSpark.chart"
+        [stroke]="vendasSpark.stroke" [colors]="vendasSpark.colors"
+        [tooltip]="vendasSpark.tooltip" />
+    </div>
+
+    <!-- Locações Ativas -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-col overflow-hidden min-h-[180px]">
+      <div class="flex items-start justify-between mb-2">
+        <p class="text-[11px] font-semibold text-gray-400 tracking-widest uppercase">Locações Ativas</p>
+        <div class="relative group">
+          <button class="p-1 text-gray-300 hover:text-orange-500 transition-colors cursor-help">
+            <span class="material-symbols-outlined text-[16px]">calendar_month</span>
+          </button>
+          <div class="absolute right-0 top-8 z-20 w-56 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 shadow-xl
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+            Contratos de locação em aberto no momento. O valor exibido é o total ainda a receber dessas locações.
+            <div class="absolute -top-1.5 right-3 w-3 h-3 bg-gray-800 rotate-45 rounded-sm"></div>
+          </div>
+        </div>
+      </div>
+      <p class="text-2xl font-bold text-gray-900 mb-1">{{ kpis.locacoesAtivas }}</p>
+      <p class="text-xs text-gray-400 font-medium mb-3">{{ formatCurrency(kpis.locacoesAtivasValor) }} em aberto</p>
+      <apx-chart
+        [series]="locacoesSpark.series" [chart]="locacoesSpark.chart"
+        [stroke]="locacoesSpark.stroke" [colors]="locacoesSpark.colors"
+        [tooltip]="locacoesSpark.tooltip" />
+    </div>
+
+    <!-- Clientes Ativos -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-col overflow-hidden min-h-[180px]">
+      <div class="flex items-start justify-between mb-2">
+        <p class="text-[11px] font-semibold text-gray-400 tracking-widest uppercase">Clientes Ativos</p>
+        <div class="relative group">
+          <button class="p-1 text-gray-300 hover:text-purple-500 transition-colors cursor-help">
+            <span class="material-symbols-outlined text-[16px]">group</span>
+          </button>
+          <div class="absolute right-0 top-8 z-20 w-56 bg-gray-800 text-white text-[11px] leading-relaxed rounded-lg px-3 py-2 shadow-xl
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+            Total de clientes cadastrados com status ativo no sistema.
+            <div class="absolute -top-1.5 right-3 w-3 h-3 bg-gray-800 rotate-45 rounded-sm"></div>
+          </div>
+        </div>
+      </div>
+      <p class="text-2xl font-bold text-gray-900 mb-1">{{ kpis.clientesAtivos }}</p>
+      <p class="text-xs text-gray-400 font-medium mb-3">Clientes cadastrados e ativos</p>
+      <apx-chart
+        [series]="clientesSpark.series" [chart]="clientesSpark.chart"
+        [stroke]="clientesSpark.stroke" [colors]="clientesSpark.colors"
+        [tooltip]="clientesSpark.tooltip" />
+    </div>
+
+  </div>
+} @else {
+  <!-- Skeleton: reserva o MESMO espaço dos KPI cards para não haver salto (CLS)
+       quando os dados reais chegam -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-col min-h-[180px] animate-pulse">
+        <div class="h-3 w-24 bg-slate-100 rounded mb-3"></div>
+        <div class="h-7 w-32 bg-slate-100 rounded mb-2"></div>
+        <div class="h-3 w-28 bg-slate-100 rounded"></div>
+        <div class="mt-auto h-[56px] bg-slate-50 rounded"></div>
+      </div>
+    }
+  </div>
+}
+
+<!-- Gráficos -->
+<div class="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 mb-6">
+
+  <!-- Bar Chart -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <div class="flex items-start justify-between mb-1">
+      <div>
+        <p class="text-sm font-semibold text-gray-800">Vendas × Locações</p>
+        <p class="text-xs text-gray-400">{{ inicio }} – {{ fim }}</p>
+      </div>
+      <div class="flex items-center gap-4 text-xs text-gray-500">
+        <span class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-sm bg-blue-500 inline-block"></span> Vendas
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-sm bg-amber-400 inline-block"></span> Locações
+        </span>
+      </div>
+    </div>
+    <div class="min-h-[250px]">
+      @if (barSeries.length > 0) {
+        <apx-chart
+          [series]="barSeries"
+          [chart]="barChart"
+          [plotOptions]="barPlotOptions"
+          [colors]="barColors"
+          [dataLabels]="barDataLabels"
+          [grid]="barGrid"
+          [xaxis]="barXaxis"
+          [yaxis]="barYaxis"
+          [tooltip]="barTooltip"
+        />
+      } @else {
+        <div class="h-[250px] flex items-center justify-center text-gray-400 text-sm">
+          <span class="material-symbols-outlined text-[32px] mr-2 opacity-30">bar_chart</span>
+          Nenhum dado no período
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Donut: Locações -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5 flex flex-col">
+    <p class="text-sm font-semibold text-gray-800 mb-0.5">Locações</p>
+    <p class="text-xs text-gray-400 mb-2">Status atual</p>
+
+    <div class="min-h-[180px] flex flex-col">
+      @if (donutSeries.length > 0 && (donutSeries[0] + donutSeries[1]) > 0) {
+        <div class="flex justify-center">
+          <apx-chart
+            [series]="donutSeries"
+            [chart]="donutChart"
+            [colors]="donutColors"
+            [labels]="donutLabels"
+            [legend]="donutLegend"
+            [dataLabels]="donutDataLabels"
+            [plotOptions]="donutPlotOptions"
+            [stroke]="donutStroke"
+            [tooltip]="donutTooltip"
+          />
+        </div>
+      } @else {
+        <div class="flex-1 flex items-center justify-center text-gray-400 text-sm">
+          Sem locações ativas
+        </div>
+      }
+    </div>
+
+    <div class="mt-3 space-y-2">
+      <div class="flex items-center justify-between text-sm">
+        <span class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+          <span class="text-gray-600">Em dia</span>
+        </span>
+        <span class="font-semibold text-gray-800">{{ locacoesEmDia }}</span>
+      </div>
+      <div class="flex items-center justify-between text-sm">
+        <span class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-red-500"></span>
+          <span class="text-gray-600">Atrasadas</span>
+        </span>
+        <span class="font-semibold text-gray-800">{{ locacoesAtrasadas.length }}</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Seção inferior -->
+<div class="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-4">
+
+  <!-- Coluna esquerda -->
+  <div class="flex flex-col gap-4">
+
+  <!-- Locações em Curso -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-sm font-semibold text-gray-800">Locações em Curso</p>
+      <span class="text-xs text-gray-400">{{ locacoesEmCurso.length }} registro(s)</span>
+    </div>
+
+    @if (locacoesEmCurso.length === 0) {
+      <div class="flex flex-col items-center justify-center py-8 text-gray-400">
+        <span class="material-symbols-outlined text-[36px] opacity-30 mb-2">calendar_month</span>
+        <p class="text-sm">Nenhuma locação ativa</p>
+      </div>
+    } @else {
+      <div class="space-y-1">
+        @for (l of locacoesEmCursoPagina; track l.id) {
+          <div class="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-slate-50 transition-colors">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+              [ngClass]="locacaoAtrasada(l) ? 'bg-red-100 text-red-500' : 'bg-blue-100 text-blue-600'">
+              <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800 truncate">{{ l.produtoNome }}</p>
+              <p class="text-xs text-gray-400">{{ l.clienteNome }} · devolver {{ l.dataDevolucao }}</p>
+            </div>
+            <span class="text-xs font-semibold shrink-0 px-2.5 py-1 rounded-lg"
+              [ngClass]="locacaoAtrasada(l)
+                ? 'bg-red-50 text-red-500'
+                : 'bg-blue-50 text-blue-600'">
+              {{ locacaoAtrasada(l) ? 'Atrasado' : 'Ativo' }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <!-- Paginação -->
+      @if (totalPaginasLocacoes > 1) {
+        <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+          <button type="button" (click)="mudarPaginaLocacoes(-1)" [disabled]="locacoesPage === 0"
+            class="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:pointer-events-none transition-colors">
+            <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+            Anterior
+          </button>
+          <span class="text-xs text-gray-400">Página {{ locacoesPage + 1 }} de {{ totalPaginasLocacoes }}</span>
+          <button type="button" (click)="mudarPaginaLocacoes(1)" [disabled]="locacoesPage >= totalPaginasLocacoes - 1"
+            class="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:pointer-events-none transition-colors">
+            Próxima
+            <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+          </button>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Produtos em Rascunho -->
+  <div class="bg-white rounded-xl border border-slate-200 p-5">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="material-symbols-outlined text-[18px] text-amber-500">edit_note</span>
+      <p class="text-sm font-semibold text-gray-800">Produtos em Rascunho</p>
+      <span class="ml-auto bg-amber-100 text-amber-600 text-[11px] font-bold px-2 py-0.5 rounded-full">
+        {{ rascunhos.length }}
+      </span>
+    </div>
+
+    @if (rascunhos.length === 0) {
+      <div class="flex items-center gap-2 text-gray-400 py-2">
+        <span class="material-symbols-outlined text-[20px] opacity-40">check_circle</span>
+        <p class="text-xs">Nenhum produto pendente de cadastro</p>
+      </div>
+    } @else {
+      <p class="text-xs text-gray-400 mb-3">Criados em vendas/locações, aguardando conclusão do cadastro.</p>
+      <div class="flex flex-wrap gap-1.5">
+        @for (r of rascunhos; track r.id) {
+          <span class="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-100 px-2 py-1 rounded-lg truncate max-w-[180px]">
+            {{ r.nome }}
+          </span>
+        }
+      </div>
+    }
+  </div>
+
+  </div>
+
+  <!-- Coluna direita -->
+  <div class="flex flex-col gap-4">
+
+    <!-- Estoque Crítico -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5 flex-1">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-[18px] text-amber-500">warning</span>
+        <p class="text-sm font-semibold text-gray-800">Estoque Crítico</p>
+        <span class="ml-auto bg-amber-100 text-amber-600 text-[11px] font-bold px-2 py-0.5 rounded-full">
+          {{ estoqueCritico.length }}
+        </span>
+      </div>
+
+      @if (estoqueCritico.length === 0) {
+        <div class="flex flex-col items-center justify-center py-6 text-gray-400">
+          <span class="material-symbols-outlined text-[32px] opacity-30 mb-1">inventory_2</span>
+          <p class="text-xs">Estoque dentro do limite</p>
+        </div>
+      } @else {
+        <div class="space-y-4">
+          @for (item of estoqueCritico; track item.id) {
+            <div>
+              <div class="flex justify-between items-baseline mb-1">
+                <p class="text-sm text-gray-700 truncate max-w-[65%]">{{ item.nome }}</p>
+                <span class="text-xs font-semibold" [ngClass]="estoqueQtdColor(item)">
+                  {{ item.quantidadeAtual }} un.
+                </span>
+              </div>
+              <p class="text-[11px] text-gray-400 mb-1.5">Mín: {{ item.estoqueMinimo }} · {{ formatCurrency(item.preco) }}/un.</p>
+              <div class="w-full bg-slate-100 rounded-full h-1.5">
+                <div class="h-1.5 rounded-full transition-all"
+                  [ngClass]="estoqueBarColor(item)"
+                  [style.width.%]="estoquePercent(item)">
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Locações Atrasadas -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-[18px] text-red-500">warning</span>
+        <p class="text-sm font-semibold text-gray-800">Locações Atrasadas</p>
+        <span class="ml-auto bg-red-100 text-red-600 text-[11px] font-bold px-2 py-0.5 rounded-full">
+          {{ locacoesAtrasadas.length }}
+        </span>
+      </div>
+
+      @if (locacoesAtrasadas.length === 0) {
+        <div class="flex flex-col items-center justify-center py-4 text-gray-400">
+          <span class="material-symbols-outlined text-[28px] opacity-30 mb-1">check_circle</span>
+          <p class="text-xs">Nenhuma locação atrasada</p>
+        </div>
+      } @else {
+        <div class="space-y-2">
+          @for (l of locacoesAtrasadas; track l.id) {
+            <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium text-gray-800 truncate">{{ l.produtoNome }}</p>
+                <p class="text-xs text-gray-400">{{ l.clienteNome }} · devolver {{ l.dataDevolucao }}</p>
+              </div>
+              <span class="text-xs font-semibold text-red-500 bg-red-50 px-2.5 py-1 rounded-lg ml-2 shrink-0">
+                Atrasado
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+  </div>
+</div>

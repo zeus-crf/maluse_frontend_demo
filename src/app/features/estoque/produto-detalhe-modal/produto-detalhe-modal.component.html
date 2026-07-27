@@ -1,0 +1,79 @@
+<p-dialog
+  header="Detalhes do produto"
+  [visible]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '560px' }"
+  [breakpoints]="{'768px': '95vw'}"
+  [contentStyle]="{ padding: '0' }"
+  (onHide)="onFechar()">
+
+  <div class="sticky top-0 bg-white z-10"><hr></div>
+
+  @if (produto) {
+    <div class="flex flex-col gap-5 px-6 py-5">
+
+      <!-- Nome + status -->
+      <div class="flex items-center gap-4">
+        <div class="flex-1 min-w-0">
+          <p class="text-[15px] font-bold text-gray-900 truncate">{{ produto.nome }}</p>
+          <p class="text-xs text-gray-400 mt-0.5">{{ produto.descricao || '—' }}</p>
+        </div>
+        <p-tag [value]="statusLabel" [severity]="statusSeverity" />
+      </div>
+
+      <!-- Informações -->
+      <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Preço de venda</div>
+          <div class="text-[13.5px] font-medium text-gray-800">{{ formatCurrency(produto.preco) }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Custo de compra</div>
+          <div class="text-[13.5px] font-medium text-gray-800">{{ formatCurrency(produto.valorCompra) }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Estoque</div>
+          <div class="text-[13.5px] font-medium text-gray-800">{{ produto.quantidadeEstoque }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-[5px]">Estoque mínimo</div>
+          <div class="text-[13.5px] font-medium text-gray-800">{{ produto.estoqueMinimo }}</div>
+        </div>
+      </div>
+
+      <!-- Fornecedores -->
+      <div>
+        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Fornecedores</div>
+        @if (produto.fornecedores.length) {
+          <div class="flex flex-col divide-y divide-slate-100 border border-slate-100 rounded-lg">
+            @for (f of produto.fornecedores; track f.nome) {
+              <div class="flex items-center justify-between px-3 py-2">
+                <span class="text-[13.5px] font-medium text-gray-800">{{ f.nome }}</span>
+                <span class="text-[13.5px] text-gray-600">{{ formatCurrency(f.precoCompra) }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="text-[13.5px] text-gray-400">Nenhum fornecedor cadastrado.</div>
+        }
+      </div>
+
+    </div>
+  }
+
+  <!-- Footer -->
+  <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50">
+    <button type="button" (click)="onFechar()"
+      class="px-4 py-[7px] text-[13px] font-medium text-gray-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+      Fechar
+    </button>
+    <button type="button" (click)="onEditar()"
+      class="flex items-center gap-1.5 px-4 py-[7px] text-[13px] font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+      <i class="pi pi-pencil text-xs"></i>
+      Editar
+    </button>
+  </div>
+
+</p-dialog>

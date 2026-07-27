@@ -1,0 +1,57 @@
+<p-toast position="top-right" [life]="4000" />
+
+<!-- Mobile Drawer -->
+<app-mobile-drawer [open]="drawerOpen()" (fechar)="fecharDrawer()" />
+
+<div class="flex h-screen bg-slate-50 overflow-hidden">
+
+  <!-- Sidebar: oculta no mobile, visível no tablet/desktop -->
+  <div class="hidden md:flex">
+    <app-sidebar />
+  </div>
+
+  <div class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- Topbar -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0">
+      <div class="flex items-center gap-2">
+        <!-- Hamburger: apenas no mobile -->
+        <button
+          (click)="abrirDrawer()"
+          class="md:hidden flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:bg-slate-100 hover:text-gray-700 transition-colors"
+          aria-label="Menu"
+        >
+          <span class="material-symbols-outlined text-[22px] leading-none">menu</span>
+        </button>
+        <div>
+          <h2 class="text-sm font-semibold text-gray-800">Bem-vindo de volta</h2>
+          <p class="text-xs text-gray-400 hidden sm:block">Marluse Materiais de Construção</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="p-2 rounded-xl text-gray-400 hover:bg-slate-100 hover:text-gray-600 transition-colors relative">
+          <!-- <span class="material-symbols-outlined text-[20px]">notifications</span>
+          <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span> -->
+        </button>
+        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+          <span class="material-symbols-outlined text-white text-[16px]">person</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-1 overflow-hidden">
+      <div class="h-full overflow-y-auto p-4 md:p-6 pb-20 md:pb-6 scrollbar-hide">
+        <router-outlet />
+      </div>
+    </main>
+
+  </div>
+
+</div>
+
+<!-- Bottom nav: apenas no mobile, some com slide-down quando drawer abre -->
+<div class="flex md:hidden transition-transform duration-300 ease-in-out"
+     [class.translate-y-full]="drawerOpen()">
+  <app-bottom-nav />
+</div>

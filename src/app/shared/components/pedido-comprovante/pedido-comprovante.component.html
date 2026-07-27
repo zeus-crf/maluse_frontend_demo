@@ -1,0 +1,127 @@
+@if (pedido()) {
+  <div [class.termica]="formato() === 'termica'">
+
+    <!-- Cabeçalho -->
+    <div class="secao" style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <strong style="font-size:19px;">Marluse</strong>
+        <div class="label" style="margin-top:2px;">Loja de materiais</div>
+      </div>
+      <div style="text-align:right;">
+        <strong>Pedido #{{ pedido()!.numero }}</strong>
+        <div class="label" style="margin-top:2px;">{{ pedido()!.dataMovimento | date:'dd/MM/yyyy' }}</div>
+      </div>
+    </div>
+
+    <!-- Cliente -->
+    <div class="secao">
+      <div class="label">Cliente</div>
+      <div><strong>{{ pedido()!.clienteNome }}</strong></div>
+      @if (pedido()!.clienteTelefone) {
+        <div>{{ formatarTelefone(pedido()!.clienteTelefone) }}</div>
+      }
+    </div>
+
+    <!-- Itens -->
+    <div class="secao">
+      <div class="label">Itens</div>
+      <table class="grid-itens">
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th style="text-align:center;">Qtd</th>
+            <th style="text-align:right;">Unit.</th>
+            <th style="text-align:right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of pedido()!.itens; track item.id) {
+            <tr>
+              <td>{{ item.produtoNome }}</td>
+              <td style="text-align:center;">{{ item.quantidade }}</td>
+              <td style="text-align:right;">{{ item.precoUnitario | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
+              <td style="text-align:right;">{{ item.subtotal | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totais -->
+    <div class="secao">
+      <div class="total-linha">
+        <span>Subtotal</span>
+        <span>{{ pedido()!.valorBruto | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+      </div>
+      @if (pedido()!.desconto && pedido()!.desconto! > 0) {
+        <div class="total-linha">
+          <span>Desconto@if (pedido()!.tipoDesconto === 'PERCENTUAL') { ({{ pedido()!.desconto }}%)}</span>
+          <span>- {{ descontoMonetario() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+        </div>
+      }
+      @if (pedido()!.juros && pedido()!.juros! > 0) {
+        <div class="total-linha">
+          <span>Juros@if (pedido()!.tipoJuros === 'PERCENTUAL') { ({{ pedido()!.juros }}%)}</span>
+          <span>+ {{ jurosMonetario() | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+        </div>
+      }
+      <div class="total-linha destaque">
+        <span>Total</span>
+        <span>{{ pedido()!.valorTotal | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+      </div>
+    </div>
+
+    <!-- Pagamento -->
+    <div class="secao">
+      <div class="total-linha">
+        <span>Pagamento</span>
+        <span>{{ pedido()!.formaPagamento }}</span>
+      </div>
+      <div class="total-linha">
+        <span>Status do Pedido</span>
+        <span>{{ pedido()!.status }}</span>
+      </div>
+    </div>
+
+    <!-- Parcelas (condicional) -->
+    @if (pedido()!.parcelas && pedido()!.parcelas!.length > 1) {
+      <div class="secao">
+        <div class="label">Parcelas</div>
+        @for (parcela of pedido()!.parcelas; track parcela.id) {
+          <div class="total-linha">
+            <span>Parcela {{ parcela.numeroParcela }} — {{ parcela.dataVencimento | date:'dd/MM/yyyy' }}</span>
+            <span>{{ parcela.status }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Entrega (condicional) -->
+    @if (pedido()!.entrega) {
+      <div class="secao">
+        <div class="label">Entrega</div>
+        <div>{{ pedido()!.entrega!.endereco }}</div>
+        <div>Prevista: {{ pedido()!.entrega!.dataPrevista | date:'dd/MM/yyyy' }}</div>
+        @if (pedido()!.entrega!.dataEntrega) {
+          <div>Realizada: {{ pedido()!.entrega!.dataEntrega | date:'dd/MM/yyyy' }}</div>
+        }
+        <div>Status: {{ pedido()!.entrega!.status }}</div>
+      </div>
+    }
+
+    <!-- Observações (condicional) -->
+    @if (pedido()!.observacao) {
+      <div class="secao">
+        <div class="label">Observações</div>
+        <div>{{ pedido()!.observacao }}</div>
+      </div>
+    }
+
+    <!-- Rodapé -->
+    <div class="rodape">
+      <div>Este documento não tem valor fiscal</div>
+      <div>Emitido em {{ hoje | date:'dd/MM/yyyy HH:mm' }}</div>
+    </div>
+
+  </div>
+}

@@ -1,0 +1,265 @@
+<p-confirmDialog />
+
+@if (searchable) {
+  <div class="px-4 pt-4 pb-2 flex items-center gap-2">
+    <div class="relative flex-1">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-gray-400 pointer-events-none">
+        search
+      </span>
+      <input
+        type="text"
+        [(ngModel)]="busca"
+        [placeholder]="searchPlaceholder"
+        class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-blue-400 text-gray-700 placeholder:text-gray-400 bg-white"
+      />
+    </div>
+    @if (showFiltrar) {
+      <button
+        type="button"
+        (click)="filtrar.emit()"
+        class="relative flex items-center justify-center w-9 h-9 rounded-lg border transition-colors flex-shrink-0"
+        [ngClass]="filtroAtivo
+          ? 'border-blue-400 bg-blue-50 text-blue-600'
+          : 'border-slate-200 text-gray-500 hover:bg-slate-50'"
+        title="Filtros">
+        <span class="material-symbols-outlined text-[18px]">tune</span>
+        @if (filtroAtivo) {
+          <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-500"></span>
+        }
+      </button>
+    }
+  </div>
+}
+
+<div class="overflow-x-auto">
+<p-table
+  [value]="rowsFiltrados"
+  [loading]="loading"
+  dataKey="id"
+  [tableStyle]="{ 'min-width': '60rem' }"
+  styleClass="p-datatable-sm"
+  [paginator]="true"
+  [rows]="pageSize"
+  [rowsPerPageOptions]="[10, 25, 50]"
+  [showCurrentPageReport]="true"
+  currentPageReportTemplate="{first}–{last} de {totalRecords}"
+  paginatorLocale="pt-BR"
+>
+
+  <!-- Cabeçalho -->
+  <ng-template #header>
+    <tr>
+      @for (col of columns; track col.field) {
+        <th [style.width]="col.width ?? 'auto'" [class]="col.cellClass ?? ''">{{ col.header }}</th>
+      }
+      @if (showActions) {
+        <th style="width: 10%"></th>
+      }
+    </tr>
+  </ng-template>
+
+  <!-- Linhas -->
+  <ng-template #body let-row let-ri="rowIndex">
+    <tr>
+      @for (col of columns; track col.field) {
+        <td
+          [class.font-mono]="col.type === 'mono'"
+          [class.text-sm]="true"
+          [class.truncate]="col.truncate"
+          [class.max-w-xs]="col.truncate"
+          [class]="col.cellClass ?? ''"
+        >
+          @switch (col.type) {
+
+            @case ('tag') {
+              @if (col.tagLabelFn ? col.tagLabelFn(row[col.field], row) : row[col.field]) {
+                <p-tag
+                  [value]="col.tagLabelFn ? col.tagLabelFn(row[col.field], row) : row[col.field]"
+                  [severity]="col.tagSeverityFn ? col.tagSeverityFn(row[col.field], row) : 'secondary'"
+                />
+              }
+            }
+
+            @case ('currency') {
+              <span class="font-semibold text-gray-800">
+                {{ formatCurrency(getCellValue(col, row, ri)) }}
+              </span>
+            }
+
+            @case ('currency-with-badge') {
+              <div class="flex items-center gap-1.5">
+                <span class="font-semibold text-gray-800">
+                  {{ formatCurrency(getCellValue(col, row, ri)) }}
+                </span>
+                @if (col.badgeFn && col.badgeFn(row)) {
+                  <span class="text-[10px] font-semibold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                    {{ col.badgeFn(row) }}
+                  </span>
+                }
+              </div>
+            }
+
+            @case ('date') {
+              <span class="text-gray-600">
+                {{ formatDate(getCellValue(col, row, ri)) }}
+              </span>
+            }
+
+            @case ('mono') {
+              <span class="text-gray-500">
+                {{ getCellValue(col, row, ri) }}
+              </span>
+            }
+
+            @default {
+              <span [ngClass]="(col.cellClassFn ? col.cellClassFn(row) : '')
+                                || (col.type === 'computed' ? 'text-gray-500' : 'text-gray-800')">
+                {{ getCellValue(col, row, ri) }}
+              </span>
+            }
+
+          }
+        </td>
+      }
+
+      @if (showActions) {
+        <td>
+          <div class="flex items-center gap-1">
+            @if (actions.showExtra) {
+              <button
+                pButton pRipple
+                type="button"
+                [icon]="extraIcon"
+                text rounded
+                severity="secondary"
+                [pTooltip]="extraTooltip"
+                tooltipPosition="top"
+                (click)="extra.emit(row)"
+              ></button>
+            }
+            @if (actions.showView !== false) {
+              <button
+                pButton pRipple
+                type="button"
+                [icon]="viewIcon"
+                text rounded
+                severity="secondary"
+                [pTooltip]="viewTooltip"
+                tooltipPosition="top"
+                (click)="verDetalhe.emit(row)"
+              ></button>
+            }
+            @if (actions.showEdit !== false) {
+              <button
+                pButton pRipple
+                type="button"
+                [icon]="editIcon"
+                text rounded
+                severity="secondary"
+                [pTooltip]="editTooltip"
+                tooltipPosition="top"
+                (click)="editar.emit(row)"
+              ></button>
+            }
+            @if (actions.useExportMenu && (actions.showExportPdf || actions.showExportTermica)) {
+              <button
+                type="button"
+                class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-slate-100 transition-colors"
+                title="Exportar"
+                (click)="toggleExportMenu($event, row)">
+                <i class="pi pi-ellipsis-v text-[13px]"></i>
+              </button>
+            } @else {
+              @if (actions.showExportPdf) {
+                <button
+                  pButton pRipple
+                  type="button"
+                  icon="pi pi-file-pdf"
+                  text rounded
+                  severity="secondary"
+                  pTooltip="Exportar PDF"
+                  tooltipPosition="top"
+                  (click)="exportPdf.emit(row)"
+                ></button>
+              }
+              @if (actions.showExportTermica) {
+                <button
+                  pButton pRipple
+                  type="button"
+                  icon="pi pi-print"
+                  text rounded
+                  severity="secondary"
+                  pTooltip="Imprimir térmica"
+                  tooltipPosition="top"
+                  (click)="exportTermica.emit(row)"
+                ></button>
+              }
+            }
+            @if (actions.showDelete !== false) {
+              <button
+                pButton pRipple
+                type="button"
+                [icon]="deleteIcon"
+                text rounded
+                severity="danger"
+                [pTooltip]="deleteTooltip"
+                tooltipPosition="top"
+                (click)="confirmarExclusao(row)"
+              ></button>
+            }
+            @if (actions.showApagar) {
+              <button
+                pButton pRipple
+                type="button"
+                [icon]="apagarIcon"
+                text rounded
+                severity="danger"
+                [pTooltip]="apagarTooltip"
+                tooltipPosition="top"
+                (click)="confirmarApagar(row)"
+              ></button>
+            }
+          </div>
+        </td>
+      }
+    </tr>
+  </ng-template>
+
+  <!-- Empty state -->
+  <ng-template #emptymessage>
+    <tr>
+      <td [attr.colspan]="totalCols" class="text-center py-10 text-gray-400 text-sm">
+        {{ emptyMessage }}
+      </td>
+    </tr>
+  </ng-template>
+
+</p-table>
+</div>
+
+@if (exportMenuVisible() && actions.useExportMenu) {
+  <div
+    class="fixed z-[9999] min-w-[140px] bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden"
+    [style.left.px]="exportMenuX()"
+    [style.top.px]="exportMenuY()"
+    (click)="$event.stopPropagation()">
+    @if (actions.showExportPdf) {
+      <button
+        type="button"
+        class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-slate-50 transition-colors"
+        (click)="exportPdf.emit(exportMenuRow()); closeExportMenu()">
+        <i class="pi pi-file-pdf text-red-500 text-[13px]"></i>
+        Exportar PDF
+      </button>
+    }
+    @if (actions.showExportTermica) {
+      <button
+        type="button"
+        class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-slate-50 transition-colors"
+        (click)="exportTermica.emit(exportMenuRow()); closeExportMenu()">
+        <i class="pi pi-print text-blue-500 text-[13px]"></i>
+        Nota térmica
+      </button>
+    }
+  </div>
+}

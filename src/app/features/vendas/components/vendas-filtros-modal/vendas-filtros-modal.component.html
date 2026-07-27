@@ -1,0 +1,115 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="fechar.emit()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '480px', }"
+  [breakpoints]="{'768px': '95vw'}"
+  [contentStyle]="{ padding: '0' }"
+  header="Filtros">
+
+<div class="sticky top-0 bg-white z-10">
+  <hr>
+</div>
+
+  <div class="flex flex-col gap-5 px-6 py-5">
+
+    <!-- Status -->
+    <div>
+      <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Status</div>
+      <div class="flex flex-wrap gap-1.5">
+        @for (op of statusOpcoes; track op.valor) {
+          <button type="button" (click)="status = op.valor"
+            class="px-3.5 py-1 text-[12px] font-medium rounded-full border transition-all cursor-pointer"
+            [class.border-blue-500]="status === op.valor"
+            [class.bg-blue-50]="status === op.valor"
+            [class.text-blue-600]="status === op.valor"
+            [class.border-slate-200]="status !== op.valor"
+            [class.text-gray-500]="status !== op.valor"
+            [class.hover:bg-slate-50]="status !== op.valor">
+            {{ op.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Forma de pagamento -->
+    <div>
+      <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Forma de pagamento</div>
+      <div class="flex flex-wrap gap-1.5">
+        @for (op of pagamentoOpcoes; track op.valor) {
+          <button type="button" (click)="formaPagamento = op.valor"
+            class="px-3.5 py-1 text-[12px] font-medium rounded-full border transition-all cursor-pointer"
+            [class.border-blue-500]="formaPagamento === op.valor"
+            [class.bg-blue-50]="formaPagamento === op.valor"
+            [class.text-blue-600]="formaPagamento === op.valor"
+            [class.border-slate-200]="formaPagamento !== op.valor"
+            [class.text-gray-500]="formaPagamento !== op.valor"
+            [class.hover:bg-slate-50]="formaPagamento !== op.valor">
+            {{ op.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Período -->
+    <div>
+      <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Período</div>
+      <div class="flex items-center gap-2">
+        <app-date-picker [(ngModel)]="inicio" />
+        <span class="text-[13px] text-gray-400 shrink-0">até</span>
+        <app-date-picker [(ngModel)]="fim" />
+      </div>
+    </div>
+
+    <!-- Faixa de valor -->
+    <div>
+      <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Faixa de valor (R$)</div>
+      <div class="flex items-center gap-2">
+        <input type="number" [(ngModel)]="minValor" placeholder="Mín." min="0"
+          class="flex-1 border border-slate-200 rounded-lg px-3 py-[7px] text-[13px] text-gray-700 outline-none focus:border-blue-400 transition-colors placeholder:text-gray-300" />
+        <span class="text-[13px] text-gray-400 shrink-0">até</span>
+        <input type="number" [(ngModel)]="maxValor" placeholder="Máx." min="0"
+          class="flex-1 border border-slate-200 rounded-lg px-3 py-[7px] text-[13px] text-gray-700 outline-none focus:border-blue-400 transition-colors placeholder:text-gray-300" />
+      </div>
+    </div>
+
+    <!-- Preview contador -->
+    <div class="flex items-center justify-center gap-1.5 py-2 bg-slate-50 rounded-lg">
+      <span class="text-[13px] font-semibold text-blue-600">{{ totalFiltrado }}</span>
+      <span class="text-[12px] text-gray-400">
+        {{ totalFiltrado === 1 ? 'registro corresponde' : 'registros correspondem' }} aos filtros
+      </span>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50">
+    
+    
+    <button type="button" (click)="onLimpar()"
+      class="flex items-center gap-1.5 text-[13px] font-medium transition-colors"
+      [ngClass]="temFiltroAtivo
+        ? 'text-red-500 hover:text-red-700 cursor-pointer'
+        : 'text-gray-300 cursor-not-allowed pointer-events-none'">
+      <i class="pi pi-times-circle text-[13px]"></i>
+      Limpar filtros
+    </button>
+    
+    
+    <div class="flex gap-2">
+      <button type="button" (click)="fechar.emit()"
+        class="px-4 py-[7px] text-[13px] font-medium text-gray-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+        Cancelar
+      </button>
+      <button type="button" (click)="onAplicar()"
+        class="px-4 py-[7px] text-[13px] font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+        Aplicar
+      </button>
+    </div>
+  
+  </div>
+
+</p-dialog>

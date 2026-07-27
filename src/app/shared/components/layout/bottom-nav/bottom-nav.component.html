@@ -1,0 +1,15 @@
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 flex items-center justify-around"
+     style="padding-bottom: env(safe-area-inset-bottom);">
+  @for (item of items; track item.route) {
+    <a
+      [routerLink]="item.route"
+      routerLinkActive #rla="routerLinkActive"
+      class="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-colors"
+      [class.text-blue-600]="rla.isActive"
+      [class.text-gray-400]="!rla.isActive"
+    >
+      <span class="material-symbols-outlined text-[22px]">{{ item.icon }}</span>
+      <span class="text-[10px] font-medium leading-tight">{{ item.label }}</span>
+    </a>
+  }
+</nav>

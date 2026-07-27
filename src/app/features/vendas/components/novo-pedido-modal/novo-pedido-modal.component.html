@@ -1,0 +1,438 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="fecharModal()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '660px'}"
+  [breakpoints]="{'768px': '95vw'}"
+  [contentStyle]="{ padding: '0' }"
+  [header]="isOrcamento ? 'Novo Orçamento' : 'Nova Venda'">
+
+<div class="sticky top-0 bg-white z-10">
+  <hr>
+</div>
+  @if (loadingDados) {
+    <div class="flex justify-center items-center py-12">
+      <i class="pi pi-spin pi-spinner text-3xl text-blue-500"></i>
+    </div>
+  } @else {
+    <div class="flex flex-col gap-[18px] px-6 py-5 overflow-y">
+
+      <!-- TIPO + DATA (só aparece se FIADO) -->
+      <div class="grid gap-3" [class.grid-cols-2]="isFiado" [class.grid-cols-1]="!isFiado">
+
+        <!-- Toggle Tipo -->
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Tipo</div>
+          <div class="flex">
+            @for (opt of tipoOpcoes; track opt.val; let i = $index) {
+              <button type="button"
+                (click)="tipo = opt.val"
+                class="flex-1 py-[7px] text-[12.5px] font-medium border transition-all duration-150 cursor-pointer"
+                [style.border-radius]="i === 0 ? '6px 0 0 6px' : '0 6px 6px 0'"
+                [style.margin-left]="i === 1 ? '-1px' : '0'"
+                [class.bg-blue-600]="tipo === opt.val"
+                [class.text-white]="tipo === opt.val"
+                [class.border-blue-600]="tipo === opt.val"
+                [class.bg-white]="tipo !== opt.val"
+                [class.text-gray-500]="tipo !== opt.val"
+                [class.border-slate-200]="tipo !== opt.val">
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Data de vencimento — só para FIADO -->
+        @if (isFiado) {
+          <div>
+            <label class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] block mb-2">Data de vencimento</label>
+            <app-date-picker [(ngModel)]="dataVencimento" />
+          </div>
+        }
+
+      </div>
+
+      <!-- CLIENTE -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Cliente</div>
+          <!-- Toggle Consumidor Final -->
+          <div class="flex items-center gap-2">
+            <span class="text-[12px]"
+              [class.text-gray-400]="!consumidorFinal"
+              [class.text-blue-600]="consumidorFinal"
+              [class.font-medium]="consumidorFinal">
+              Consumidor Final
+            </span>
+            <button type="button"
+              (click)="setConsumidorFinal(!consumidorFinal)"
+              [disabled]="exigeCliente"
+              class="relative w-10 h-[22px] rounded-full transition-colors duration-200 focus:outline-none flex-shrink-0"
+              [style.background-color]="consumidorFinal && !exigeCliente ? '#3b82f6' : '#e2e8f0'"
+              [style.opacity]="exigeCliente ? '0.45' : '1'"
+              [style.cursor]="exigeCliente ? 'not-allowed' : 'pointer'">
+              <span class="absolute top-[3px] w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-200"
+                [style.left]="consumidorFinal ? '22px' : '3px'">
+              </span>
+            </button>
+          </div>
+        </div>
+        @if (!consumidorFinal) {
+          <app-select-search
+            [(ngModel)]="clienteId"
+            [options]="clienteOptions"
+            placeholder="Selecionar cliente…" />
+        }
+        @if (exigeCliente) {
+          <p class="mt-1 text-[11.5px] text-amber-600 flex items-center gap-1">
+            <i class="pi pi-lock text-[11px]"></i>
+            Fiado e parcelado exigem um cliente cadastrado.
+          </p>
+        }
+      </div>
+
+      <!-- ITENS -->
+      <div>
+        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Itens</div>
+
+        <div class="overflow-x-auto -mx-6 px-6">
+        <div class="border border-slate-200 rounded-md overflow-hidden min-w-[520px]">
+
+          <!-- Cabeçalho -->
+          <div class="grid grid-cols-[180px_68px_100px_100px_56px] gap-2 bg-slate-50 border-b border-slate-200 px-3 py-[7px]">
+            <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Produto</div>
+            <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] text-right">Qtd.</div>
+            <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] text-right">Vl. Unit.</div>
+            <div class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] text-right">Total</div>
+            <div></div>
+          </div>
+
+          <!-- Linhas -->
+          @for (item of itens; track trackByIndex($index); let i = $index) {
+            <div class="border-b border-slate-100 last:border-0 py-2">
+              <div class="grid grid-cols-[180px_68px_100px_100px_56px] gap-4 px-3 items-center">
+
+                <!-- Produto -->
+                <app-select-search
+                *ngIf="!item.produtoNovo"
+                  [(ngModel)]="item.produtoId"
+                  (ngModelChange)="onProdutoChange(item)"
+                  [options]="produtoOptions"
+                  placeholder="Selecionar produto…" />
+
+                  <!-- Produto novo: nome digitado na hora (o valor vai na coluna "Preço unitário") -->
+              <input
+                *ngIf="item.produtoNovo"
+                type="text"
+                [(ngModel)]="item.produtoNome"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Nome do produto"
+                class="w-full bg-white border border-slate-200 rounded-[6px] px-2 py-[5px] text-[15px] text-gray-800 outline-none font-[inherit]" />
+
+
+
+                <!-- Quantidade -->
+                <input type="number" [(ngModel)]="item.quantidade"
+                  [min]="permiteFracao(item) ? 0.001 : 1"
+                  [step]="permiteFracao(item) ? 0.01 : 1"
+                  class="w-full bg-white border border-slate-200 rounded-[6px] px-2 py-[5px] text-[12px] text-gray-800 text-right outline-none font-[inherit]" />
+
+                <!-- Preço unitário -->
+                <input type="number" [(ngModel)]="item.precoUnitario" min="0" step="0.01"
+                  class="w-full bg-white border border-slate-200 rounded-[6px] px-2 py-[5px] text-[12px] text-gray-800 text-right outline-none font-[inherit]" />
+
+                <!-- Total da linha -->
+                <div class="text-[12px] font-semibold text-right whitespace-nowrap font-mono"
+                  [class.text-gray-800]="rowTotal(item) > 0"
+                  [class.text-gray-300]="rowTotal(item) === 0">
+                  {{ rowTotal(item) > 0 ? formatCurrency(rowTotal(item)) : '—' }}
+                </div>
+
+
+                <!-- + / × -->
+                <div class="flex items-center justify-center gap-1">
+                  <button type="button" (click)="incrementarQty(item)"
+                    class="w-6 h-6 flex items-center justify-center text-[14px] leading-none text-gray-400 hover:text-blue-500 border border-slate-200 rounded transition-colors">
+                    +
+                  </button>
+                  <button type="button" (click)="decrementarQty(i)"
+                    class="w-6 h-6 flex items-center justify-center text-[16px] leading-none text-gray-300 hover:text-red-500 border border-slate-200 rounded transition-colors">
+                    ×
+                  </button>
+                </div>
+
+              </div>
+
+              <div class="px-3 pt-2 flex justify-end gap-2">
+                 <button type="button" class=" p-button p-button-text rounded-full  p-button-sm hover:bg-slate-50 transition-colors font-[inherit] border-t border-slate-100"
+                      (click)="alternarProdutoNovo(item)">
+                      <i class="pi pi-plus text-[10px]"></i>
+                {{ item.produtoNovo ? 'Usar produto do estoque' : 'Produto novo' }}
+              </button>
+                <button type="button" *ngIf="!item.produtoNovo" (click)="item.baixarEstoque = !item.baixarEstoque"
+                  class="inline-flex items-center gap-1.5 pl-1 pr-2.5 py-[3px] rounded-full border text-[11.5px] font-medium transition-all duration-150 cursor-pointer select-none"
+                  [class.bg-blue-50]="item.baixarEstoque"
+                  [class.border-blue-200]="item.baixarEstoque"
+                  [class.text-blue-600]="item.baixarEstoque"
+                  [class.bg-slate-50]="!item.baixarEstoque"
+                  [class.border-slate-200]="!item.baixarEstoque"
+                  [class.text-gray-400]="!item.baixarEstoque">
+                  <span class="flex items-center justify-center w-[18px] h-[18px] rounded-full text-white transition-colors"
+                    [class.bg-blue-500]="item.baixarEstoque"
+                    [class.bg-slate-300]="!item.baixarEstoque">
+                    <i class="pi text-[9px]" [class.pi-check]="item.baixarEstoque" [class.pi-minus]="!item.baixarEstoque"></i>
+                  </span>
+                  {{ item.baixarEstoque  ? 'Baixa do estoque' : 'Não baixa estoque' }}
+              
+                </button>
+
+                <!-- Botão para alternar o modo da linha -->
+             
+              </div>
+            </div>
+            
+          }
+
+          <!-- Adicionar produto -->
+          <button type="button" (click)="adicionarLinha()"
+            class="w-full flex items-center gap-[6px] px-3 py-2 text-[12px] text-gray-400 hover:bg-slate-50 transition-colors font-[inherit] border-t border-slate-100">
+            <i class="pi pi-plus text-[10px]"></i>
+            Adicionar produto
+          </button>
+          
+
+        </div>
+        </div>
+      </div>
+
+      <!-- DESCONTO -->
+      <div>
+        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Desconto <span class="text-[10px] font-normal normal-case">(opcional)</span></div>
+        <div class="flex gap-2">
+          <!-- Toggle % / R$ -->
+          <div class="flex flex-shrink-0">
+            @for (opt of tipoDescontoOpcoes; track opt.val; let i = $index) {
+              <button type="button"
+                (click)="tipoDesconto = opt.val"
+                class="px-3 py-[6px] text-[12px] font-semibold border transition-all cursor-pointer font-[inherit]"
+                [style.border-radius]="i === 0 ? '6px 0 0 6px' : '0 6px 6px 0'"
+                [style.margin-left]="i === 1 ? '-1px' : '0'"
+                [class.bg-blue-600]="tipoDesconto === opt.val"
+                [class.text-white]="tipoDesconto === opt.val"
+                [class.border-blue-600]="tipoDesconto === opt.val"
+                [class.bg-white]="tipoDesconto !== opt.val"
+                [class.text-gray-500]="tipoDesconto !== opt.val"
+                [class.border-slate-200]="tipoDesconto !== opt.val">
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+          <input type="number" [(ngModel)]="desconto" min="0" [max]="tipoDesconto === 'PERCENTUAL' ? 100 : null" step="0.01"
+            placeholder="{{ tipoDesconto === 'PERCENTUAL' ? 'Ex: 10' : 'Ex: 50,00' }}"
+            class="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-[6px] text-[13px] text-gray-800 outline-none focus:border-blue-400 font-[inherit] transition-colors" />
+        </div>
+      </div>
+
+      <!-- JUROS -->
+      <div>
+        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Juros <span class="text-[10px] font-normal normal-case">(opcional)</span></div>
+        <div class="flex gap-2">
+          <!-- Toggle % / R$ -->
+          <div class="flex flex-shrink-0">
+            @for (opt of tipoJurosOpcoes; track opt.val; let i = $index) {
+              <button type="button"
+                (click)="tipoJuros = opt.val"
+                class="px-3 py-[6px] text-[12px] font-semibold border transition-all cursor-pointer font-[inherit]"
+                [style.border-radius]="i === 0 ? '6px 0 0 6px' : '0 6px 6px 0'"
+                [style.margin-left]="i === 1 ? '-1px' : '0'"
+                [class.bg-orange-500]="tipoJuros === opt.val"
+                [class.text-white]="tipoJuros === opt.val"
+                [class.border-orange-500]="tipoJuros === opt.val"
+                [class.bg-white]="tipoJuros !== opt.val"
+                [class.text-gray-500]="tipoJuros !== opt.val"
+                [class.border-slate-200]="tipoJuros !== opt.val">
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+          <input type="number" [(ngModel)]="juros" min="0" [max]="tipoJuros === 'PERCENTUAL' ? 100 : null" step="0.01"
+            placeholder="{{ tipoJuros === 'PERCENTUAL' ? 'Ex: 5' : 'Ex: 25,00' }}"
+            class="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-[6px] text-[13px] text-gray-800 outline-none focus:border-orange-400 font-[inherit] transition-colors" />
+        </div>
+      </div>
+
+      <!-- PARCELAS (FIADO ou múltiplas) -->
+      <div class="flex flex-col gap-2">
+        <div class="grid gap-3" [class.grid-cols-2]="usaParcelas" [class.grid-cols-1]="!usaParcelas">
+          <div>
+            <label class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] block mb-2">Parcelas</label>
+            <input type="number" [(ngModel)]="numeroParcelas" (ngModelChange)="onNumeroParcelas($event)" min="1" max="36"
+              class="w-full bg-white border border-slate-200 rounded-lg px-3 py-[6px] text-[13px] text-gray-800 outline-none focus:border-blue-400 font-[inherit] transition-colors" />
+          </div>
+          @if (usaParcelas) {
+            <div>
+              <label class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] block mb-2">1° vencimento</label>
+              <app-date-picker [(ngModel)]="primeiroVencimento" />
+            </div>
+          }
+        </div>
+        @if (numeroParcelas > 1 && total > 0) {
+          <div class="flex items-center justify-between px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg">
+            <span class="text-[12px] text-blue-600 font-medium">{{ numeroParcelas }}× de</span>
+            <span class="text-[14px] font-bold text-blue-700 font-mono">{{ formatCurrency(total / numeroParcelas) }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- ENTREGA -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em]">Entrega</div>
+          <div class="flex items-center gap-2">
+            <span class="text-[12px]"
+              [class.text-gray-400]="!temEntrega"
+              [class.text-blue-600]="temEntrega"
+              [class.font-medium]="temEntrega">
+              Incluir entrega
+            </span>
+            <button type="button"
+              (click)="temEntrega = !temEntrega"
+              class="relative w-10 h-[22px] rounded-full transition-colors duration-200 focus:outline-none flex-shrink-0"
+              [style.background-color]="temEntrega ? '#3b82f6' : '#e2e8f0'">
+              <span class="absolute top-[3px] w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-200"
+                [style.left]="temEntrega ? '22px' : '3px'">
+              </span>
+            </button>
+          </div>
+        </div>
+        @if (temEntrega) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="col-span-2">
+              <label class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] block mb-2">Endereço de entrega</label>
+              <input type="text" [(ngModel)]="enderecoEntrega" name="enderecoEntrega"
+                #enderecoField="ngModel" maxlength="255"
+                placeholder="Ex: Rua das Flores, 123, Centro"
+                class="w-full bg-white border rounded-md px-3 py-[7px] text-[13px] text-gray-800 outline-none focus:border-blue-400 transition-colors font-[inherit]"
+                [class.border-red-400]="enderecoField.invalid && enderecoField.touched"
+                [class.border-slate-200]="!(enderecoField.invalid && enderecoField.touched)" />
+              @if (enderecoField.invalid && enderecoField.touched) {
+                <span class="text-xs text-red-500 mt-0.5 flex items-center gap-1">
+                  <i class="pi pi-times-circle text-[10px]"></i> Máximo 255 caracteres
+                </span>
+              }
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] block mb-2">Data prevista <span class="font-normal normal-case">(opcional)</span></label>
+              <app-date-picker [(ngModel)]="dataPrevistaEntrega" />
+            </div>
+          </div>
+        }
+      </div>
+
+      <div>
+        <label class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] block mb-2">Observação</label>
+        <textarea
+          [(ngModel)]="observacao"
+          rows="3"
+          placeholder="Observações sobre a venda (opcional)…"
+          class="w-full bg-white border border-slate-200 rounded-md px-3 py-[9px] text-[13px] text-gray-800 font-[inherit] outline-none resize-y focus:border-blue-400 transition-colors">
+        </textarea>
+      </div>
+
+      <!-- DATA DO PEDIDO -->
+      <div>
+        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Data do pedido</div>
+        <app-date-picker [(ngModel)]="dataMovimento" />
+      </div>
+
+      <!-- PAGAMENTO + TOTAL -->
+      <div class="grid grid-cols-[1fr_auto] gap-4 items-end">
+
+        <!-- Pills pagamento -->
+        <div>
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Pagamento</div>
+          <div class="flex flex-wrap gap-[6px]">
+            @for (f of formasPagamento; track f.valor) {
+              <button type="button"
+                (click)="onSelectFormaPagamento(f.valor)"
+                class="px-[14px] py-[5px] text-[12px] font-medium border rounded-full transition-all duration-150 cursor-pointer font-[inherit]"
+                [class.border-blue-500]="formaPagamento === f.valor"
+                [class.bg-blue-50]="formaPagamento === f.valor"
+                [class.text-blue-600]="formaPagamento === f.valor"
+                [class.border-slate-200]="formaPagamento !== f.valor"
+                [class.text-gray-500]="formaPagamento !== f.valor"
+                [class.bg-transparent]="formaPagamento !== f.valor">
+                {{ f.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div class="text-right">
+          <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-1">Total</div>
+          @if (valorDesconto > 0 || valorJuros > 0) {
+            <div class="text-[11px] text-gray-400 line-through font-mono mb-0.5">{{ formatCurrency(valorBruto) }}</div>
+          }
+          @if (valorDesconto > 0) {
+            <div class="text-[11px] text-red-400 font-mono mb-0.5">-{{ formatCurrency(valorDesconto) }}</div>
+          }
+          @if (valorJuros > 0) {
+            <div class="text-[11px] text-orange-500 font-mono mb-0.5">+{{ formatCurrency(valorJuros) }}</div>
+          }
+          <div class="text-[24px] font-bold font-mono leading-none transition-colors"
+            [class.text-blue-600]="total > 0"
+            [class.text-gray-300]="total === 0">
+            {{ formatCurrency(total) }}
+          </div>
+        </div>
+
+      </div>
+
+      
+
+      <!-- AVISO ORÇAMENTO -->
+      @if (isOrcamento) {
+        <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-200">
+          <i class="pi pi-info-circle text-amber-500 text-[14px] flex-shrink-0"></i>
+          <p class="text-[12px] text-amber-700 leading-snug">
+            Orçamentos <strong>não</strong> baixam estoque nem geram lançamento financeiro.
+            Converta para venda quando confirmado pelo cliente.
+          </p>
+        </div>
+      }
+
+    </div>
+  }
+
+  <!-- Footer -->
+  <div class="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-slate-50">
+    <button type="button" (click)="fecharModal()"
+      class="px-4 py-[7px] text-[13px] font-medium text-gray-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+      Cancelar
+    </button>
+    <button type="button" (click)="salvar()"
+      [disabled]="!formValida || salvando"
+      class="flex items-center gap-2 px-4 py-[7px] text-[13px] font-semibold text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+      [class.bg-amber-500]="isOrcamento"
+      [class.hover:bg-amber-600]="isOrcamento"
+      [class.bg-blue-600]="!isOrcamento"
+      [class.hover:bg-blue-700]="!isOrcamento">
+      @if (salvando) {
+        <i class="pi pi-spin pi-spinner text-xs"></i>
+        Salvando...
+      } @else if (isOrcamento) {
+        <i class="pi pi-file text-xs"></i>
+        Salvar Orçamento
+      } @else {
+        <i class="pi pi-check text-xs"></i>
+        Salvar Venda
+      }
+    </button>
+  </div>
+
+</p-dialog>
+
+<p-confirmdialog appendTo="body" />

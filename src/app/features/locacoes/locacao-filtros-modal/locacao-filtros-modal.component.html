@@ -1,0 +1,118 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="fechar.emit()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '480px' }"
+  [breakpoints]="{'768px': '95vw'}"
+  [contentStyle]="{ padding: '0' }"
+  header="Filtros">
+
+<div class="sticky top-0 bg-white z-10">
+  <hr>
+</div>
+
+  <div class="flex flex-col gap-6 px-6 py-4">
+
+    <!-- ── Status ──────────────────────────────────────────── -->
+    <div>
+      <p class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Status</p>
+      <div class="flex flex-wrap gap-1.5">
+        @for (op of statusOpcoes; track op.value) {
+          <button
+            type="button"
+            (click)="status = op.value"
+            class="text-[12px] px-3 py-1.5 rounded-lg border font-medium transition-colors"
+            [ngClass]="status === op.value
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'border-slate-200 text-gray-600 hover:bg-slate-50'">
+            {{ op.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ── Forma de pagamento ───────────────────────────────── -->
+    <div>
+      <p class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Forma de pagamento</p>
+      <div class="flex flex-wrap gap-1.5">
+        @for (op of pagamentoOpcoes; track op.value) {
+          <button
+            type="button"
+            (click)="formaPagamento = op.value"
+            class="text-[12px] px-3 py-1.5 rounded-lg border font-medium transition-colors"
+            [ngClass]="formaPagamento === op.value
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'border-slate-200 text-gray-600 hover:bg-slate-50'">
+            {{ op.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ── Faixa de valor ───────────────────────────────────── -->
+    <div>
+      <p class="text-[10.5px] font-semibold text-gray-400 uppercase tracking-[0.06em] mb-2">Valor total (R$)</p>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[11px] text-gray-400 mb-1 block">Mínimo</label>
+          <input
+            type="number"
+            [(ngModel)]="minValor"
+            placeholder="0,00"
+            min="0"
+            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-blue-400 bg-slate-50 text-gray-700 placeholder-gray-400"
+          />
+        </div>
+        <div>
+          <label class="text-[11px] text-gray-400 mb-1 block">Máximo</label>
+          <input
+            type="number"
+            [(ngModel)]="maxValor"
+            placeholder="∞"
+            min="0"
+            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-blue-400 bg-slate-50 text-gray-700 placeholder-gray-400"
+          />
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Footer ──────────────────────────────────────────────── -->
+  <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50">
+
+    <button
+      type="button"
+      (click)="onLimpar()"
+      class="flex items-center gap-1.5 text-[13px] font-medium transition-colors cursor-pointer"
+      [ngClass]="temFiltroAtivo
+        ? 'text-red-500 hover:text-red-700'
+        : 'text-gray-300 cursor-not-allowed pointer-events-none'">
+      <i class="pi pi-times-circle text-[13px]"></i>
+      Limpar filtros
+    </button>
+
+    <div class="flex gap-2">
+      <button
+        type="button"
+        (click)="fechar.emit()"
+        class="px-4 py-[7px] text-[13px] font-medium text-gray-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        (click)="onAplicar()"
+        class="px-4 py-[7px] text-[13px] font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+        @if (contadorFiltros > 0) {
+          Aplicar ({{ contadorFiltros }})
+        } @else {
+          Aplicar
+        }
+      </button>
+    </div>
+
+  </div>
+
+</p-dialog>
