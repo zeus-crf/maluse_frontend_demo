@@ -3,7 +3,14 @@
 <!-- Mobile Drawer -->
 <app-mobile-drawer [open]="drawerOpen()" (fechar)="fecharDrawer()" />
 
-<div class="flex h-screen bg-slate-50 overflow-hidden">
+<div class="flex flex-col h-screen">
+
+  <!-- Faixa de ambiente de demonstração -->
+  <div class="bg-amber-500 text-white text-center text-xs font-medium py-1.5 px-4 shrink-0">
+    🔎 Ambiente de demonstração — os dados são fictícios e reiniciados periodicamente.
+  </div>
+
+  <div class="flex flex-1 min-h-0 bg-slate-50 overflow-hidden">
 
   <!-- Sidebar: oculta no mobile, visível no tablet/desktop -->
   <div class="hidden md:flex">
@@ -45,6 +52,8 @@
         <router-outlet />
       </div>
     </main>
+
+  </div>
 
   </div>
 
