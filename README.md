@@ -1,59 +1,69 @@
-# MarluseFrontend
+# Marluse — Demo (Portfólio)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.3.
+SaaS de gestão para loja de materiais de construção: **vendas, locações, estoque, clientes e financeiro** em um só lugar. Este é um **ambiente de demonstração público**, com dados fictícios que são reiniciados automaticamente — sinta-se à vontade para criar, editar e excluir.
 
-## Development server
+🔗 **Ao vivo:** https://maluse-demo.vercel.app
+👤 **Login:** `demo@marluse.com` · **Senha:** `demo123` — ou clique em **"Entrar como visitante"** na tela de login.
 
-To start a local development server, run:
+> ⚠️ Dados fictícios, gerados por um seeder e **reiniciados a cada 6h**. Nenhuma informação real de clientes.
 
+---
+
+## 🧱 Stack
+
+**Frontend**
+- Angular 22 (standalone components, signals, lazy loading)
+- PrimeNG 21 · TailwindCSS · ApexCharts
+- Autenticação por cookie httpOnly com refresh token automático (interceptor)
+
+**Backend** ([repositório](https://github.com/zeus-crf/maluse_backend_demo))
+- Spring Boot 4 · Java 21
+- MySQL 8 · Flyway (migrations versionadas)
+- Spring Security + JWT (access token + refresh token em cookie httpOnly)
+- Testes com JUnit + H2
+
+**Infra**
+- Docker · Railway (API + MySQL) · Vercel (frontend)
+
+---
+
+## 📦 Módulos
+
+| Módulo | O que faz |
+|--------|-----------|
+| **Dashboard** | KPIs, gráficos de receita, estoque crítico, locações em curso |
+| **Vendas** | Pedidos com itens, descontos, formas de pagamento, entrega e comprovante |
+| **Locações** | Aluguel de equipamentos com controle de retirada/devolução e status (ativa, atrasada, devolvida) |
+| **Estoque** | Produtos, categorias, unidades de medida e fornecedores com preço de compra |
+| **Clientes** | Cadastro, histórico de compras/locações, saldo devedor e observações |
+| **Financeiro** | Lançamentos de receita/despesa, recorrência, abatimento de dívida |
+| **Relatórios** | Top clientes/produtos, receita mensal, status financeiro |
+
+---
+
+## 🔒 Sobre o ambiente de demonstração
+
+- Os dados são **gerados por um seeder** no primeiro boot e **reiniciados a cada 6h** por um scheduler — o demo sempre volta a um estado consistente.
+- Um único usuário público (`demo@marluse.com`) já vem provisionado; cadastro público está desativado.
+- Isolado do ambiente real: repositórios, banco e deploy próprios.
+
+---
+
+## 🚀 Rodar localmente
+
+**Backend** (Docker — sobe API + MySQL e semeia os dados):
 ```bash
-ng serve
+# no repositório do backend, com um .env baseado no .env.example
+docker compose up --build
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+**Frontend:**
 ```bash
-ng generate component component-name
+npm install --legacy-peer-deps
+npm start
 ```
+Abra http://localhost:4200 (o `proxy.conf.json` encaminha `/api` para `http://localhost:8080`).
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+---
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+*Projeto de portfólio. O sistema original foi desenvolvido para um cliente real; este demo usa uma base de código separada, sem dados reais.*
